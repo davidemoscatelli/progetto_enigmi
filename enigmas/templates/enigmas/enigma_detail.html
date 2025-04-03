@@ -1,0 +1,161 @@
+{% extends 'enigmas/base.html' %}
+
+{% block title %}Enigma Corrente{% endblock %}
+
+{% block content %}
+    {# Titolo della pagina #}
+    <h2 class="border-bottom pb-2 mb-4 display-6"> {# Stile titolo Bootstrap #}
+        <i class="bi bi-puzzle me-2"></i>Enigma Corrente {# Icona Opzionale #}
+    </h2>
+
+    {% if enigma %}
+        {% if not risposta_precedente %}
+            <div class="text-center mb-4 p-3 bg-body-tertiary rounded shadow-sm"> {# Stile contenitore timer #}
+                <h3 class="fs-5 text-body-secondary mb-2">Tempo Rimanente:</h3>
+                {# Timer con stile custom definito in base.html #}
+                <div id="countdown-timer" data-endtime="{{ tempo_rimanente_ms }}">--:--:--:--</div>
+            </div>
+
+            {# Card Bootstrap per l'enigma #}
+            <div class="card mb-4 shadow-sm">
+              <div class="card-header">
+                  <h3 class="card-title fs-4 mb-0">{{ enigma.titolo|default:"Enigma" }}</h3>
+              </div>
+              <div class="card-body">
+                {# Usiamo card-text per il paragrafo #}
+                <p class="card-text fs-5" style="white-space: pre-wrap;">{{ enigma.testo|linebreaksbr }}</p>
+              </div>
+            </div>
+
+            {# Form con stile Bootstrap #}
+            <div class="card shadow-sm">
+              <div class="card-body">
+                  <h4 class="card-title fs-5 mb-3">Invia la tua soluzione</h4>
+                  <form method="post">
+                      {% csrf_token %}
+                      {# Applica classi Bootstrap ai campi del form #}
+                      <div class="mb-3">
+                          <label for="{{ form.risposta_inserita.id_for_label }}" class="form-label">{{ form.risposta_inserita.label }}</label>
+                          {# Aggiungiamo la classe form-control all'input #}
+                          <input type="text"
+                                 name="{{ form.risposta_inserita.name }}"
+                                 id="{{ form.risposta_inserita.id_for_label }}"
+                                 class="form-control form-control-lg {% if form.risposta_inserita.errors %}is-invalid{% endif %}" {# Aggiunto form-control-lg per dimensione #}
+                                 placeholder="Inserisci qui la soluzione..."
+                                 maxlength="{{ form.risposta_inserita.field.max_length }}"
+                                 required>
+                          {% if form.risposta_inserita.errors %}
+                              <div class="invalid-feedback">
+                                  {{ form.risposta_inserita.errors|striptags }}
+                              </div>
+                          {% endif %}
+                      </div>
+                      <button type="submit" class="btn btn-danger btn-lg w-100"> {# Bottone grande e rosso custom #}
+                          <i class="bi bi-send-fill me-2"></i>Invia Risposta
+                      </button>
+                  </form>
+              </div>
+            </div>
+
+        {% else %}
+            {# Mostra l'enigma anche se ha risposto #}
+             <div class="card mb-4 shadow-sm">
+               <div class="card-header">
+                   <h3 class="card-title fs-4 mb-0">{{ enigma.titolo|default:"Enigma" }}</h3>
+               </div>
+               <div class="card-body">
+                 <p class="card-text fs-5" style="white-space: pre-wrap;">{{ enigma.testo|linebreaksbr }}</p>
+               </div>
+             </div>
+
+             {# Alert Bootstrap per indicare che ha già risposto #}
+             <div class="alert {% if risposta_precedente.is_corretta %}alert-success{% else %}alert-danger{% endif %} shadow-sm" role="alert">
+                <h4 class="alert-heading">
+                    {% if risposta_precedente.is_corretta %}<i class="bi bi-check-circle-fill me-2"></i>Risposta Inviata!{% else %}<i class="bi bi-x-octagon-fill me-2"></i>Risposta Inviata{% endif %}
+                </h4>
+                <p>
+                    Hai già inviato la tua risposta per questo enigma: <strong>{{ risposta_precedente.risposta_inserita }}</strong>
+                </p>
+                <hr>
+                <p class="mb-0">
+                    Esito:
+                    <strong>
+                        {% if risposta_precedente.is_corretta %}
+                            Corretta! Hai ottenuto {{ risposta_precedente.punteggio|floatformat:2 }} punti.
+                        {% else %}
+                            Errata.
+                        {% endif %}
+                    </strong>
+                    Attendi la fine dell'enigma e il prossimo!
+                 </p>
+            </div>
+        {% endif %}
+
+    {% elif messaggio_attesa %}
+        <div class="alert alert-warning text-center shadow-sm" role="alert">
+            <h4 class="alert-heading"><i class="bi bi-hourglass-split me-2"></i>In Attesa</h4>
+            {{ messaggio_attesa }}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+    {# Lo script del timer rimane invariato, ma assicurati che l'ID "countdown-timer" esista ancora #}
+    {% if enigma and not risposta_precedente and tempo_rimanente_ms > 0 %}
+    <script>
+        // Il tuo codice Javascript per il timer va qui (nessuna modifica necessaria)
+        function startCountdown(durationMs) {
+            const timerElement = document.getElementById('countdown-timer');
+            if (!timerElement) return;
+
+            let remainingTime = durationMs;
+
+            function updateTimer() {
+                if (remainingTime <= 0) {
+                    timerElement.textContent = "Tempo Scaduto!";
+                    const formButton = document.querySelector('form button[type="submit"]');
+                    if (formButton) {
+                        formButton.disabled = true;
+                        formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto'; // Update icon/text
+                    }
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                remainingTime -= 1000;
+
+                const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+                const displayDays = String(days).padStart(2, '0');
+                const displayHours = String(hours).padStart(2, '0');
+                const displayMinutes = String(minutes).padStart(2, '0');
+                const displaySeconds = String(seconds).padStart(2, '0');
+
+                timerElement.textContent = `${displayDays}:${displayHours}:${displayMinutes}:${displaySeconds}`;
+            }
+
+            updateTimer();
+            const intervalId = setInterval(updateTimer, 1000);
+        }
+
+        const timerDiv = document.getElementById('countdown-timer');
+        const endTimeMs = parseInt(timerDiv.getAttribute('data-endtime'), 10);
+
+        if (!isNaN(endTimeMs) && endTimeMs > 0) {
+             startCountdown(endTimeMs);
+        } else if (endTimeMs <= 0) { // Handle case where it's already expired on load
+             timerDiv.textContent = "Tempo Scaduto!";
+             const formButton = document.querySelector('form button[type="submit"]');
+             if (formButton) {
+                 formButton.disabled = true;
+                 formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto';
+             }
+        } else {
+            timerDiv.textContent = "--:--:--:--"; // Fallback
+        }
+    </script>
+    {% endif %}
+{% endblock %}

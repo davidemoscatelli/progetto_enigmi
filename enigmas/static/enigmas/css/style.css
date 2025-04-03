@@ -1,0 +1,264 @@
+/* enigmas/static/enigmas/css/style.css */
+
+body {
+    background-color: #1a1a1a; /* Sfondo molto scuro */
+    color: #e0e0e0; /* Testo grigio chiaro */
+    font-family: 'Courier New', Courier, monospace; /* Font "tech" o gotico se preferisci */
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+header {
+    background-color: #0d0d0d; /* Nero quasi puro */
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #444; /* Leggero bordo separatore */
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+header h1 {
+    color: #e53935; /* Rosso scuro per il titolo */
+    margin: 0;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px #000;
+}
+
+nav {
+    margin-top: 1rem;
+}
+
+nav a {
+    color: #b0bec5; /* Grigio-azzurro chiaro per i link */
+    text-decoration: none;
+    margin: 0 1rem;
+    transition: color 0.3s ease;
+}
+
+nav a:hover, nav a:focus {
+    color: #ff7043; /* Arancione scuro al passaggio del mouse */
+}
+
+nav span {
+    color: #cfd8dc; /* Grigio più chiaro per il benvenuto */
+    margin-right: 1rem;
+}
+
+.logout-button {
+    background: none;
+    border: 1px solid #b0bec5;
+    color: #b0bec5;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #e53935;
+    color: #1a1a1a;
+    border-color: #e53935;
+}
+
+main {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background-color: #262626; /* Grigio scuro per il contenuto principale */
+    border: 1px solid #444;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+h2, h3 {
+    color: #e53935; /* Rosso scuro per i titoli di sezione */
+    border-bottom: 1px solid #555;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Box Enigma */
+.enigma-box {
+    background-color: #1f1f1f;
+    border: 1px dashed #555;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.7);
+}
+
+.enigma-text {
+    font-size: 1.1rem;
+    color: #c5c5c5;
+    white-space: pre-wrap; /* Mantiene la formattazione del testo */
+}
+
+/* Timer */
+.timer-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#countdown-timer {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #ffcc00; /* Giallo/Oro per il timer */
+    background-color: #111;
+    padding: 10px 20px;
+    border-radius: 5px;
+    display: inline-block;
+    border: 1px solid #444;
+    min-width: 250px; /* Assicura spazio sufficiente */
+}
+
+/* Form */
+.risposta-form label,
+.login-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #b0bec5;
+}
+
+.risposta-form input[type="text"],
+.login-form input[type="text"],
+.login-form input[type="password"] {
+    width: calc(100% - 22px); /* Considera padding e border */
+    padding: 10px;
+    margin-bottom: 1rem;
+    background-color: #333;
+    border: 1px solid #555;
+    color: #e0e0e0;
+    font-size: 1rem;
+}
+
+.risposta-form input[type="text"]:focus,
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+     outline: none;
+     border-color: #ff7043; /* Arancione scuro sul focus */
+     box-shadow: 0 0 5px rgba(255, 112, 67, 0.5);
+}
+
+.risposta-form button,
+.login-form button {
+    background-color: #e53935; /* Rosso scuro */
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.risposta-form button:hover,
+.login-form button:hover {
+    background-color: #c62828; /* Rosso più scuro */
+}
+
+/* Messaggi Utente (Success, Warning, Error) */
+.messages {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 1.5rem;
+}
+
+.messages li {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-left: 5px solid;
+    background-color: #333; /* Sfondo scuro per i messaggi */
+}
+
+.messages li.success {
+    border-color: #4CAF50; /* Verde per successo */
+    color: #4CAF50;
+}
+
+.messages li.warning {
+    border-color: #ff9800; /* Arancione per warning */
+    color: #ff9800;
+}
+
+.messages li.error {
+    border-color: #f44336; /* Rosso per errore */
+    color: #f44336;
+}
+
+/* Stato Risposta Inviata */
+.risposta-inviata {
+    background-color: #1f1f1f;
+    border: 1px solid #444;
+    padding: 1.5rem;
+    margin-top: 2rem;
+    text-align: center;
+}
+.risposta-inviata strong.corretta {
+    color: #4CAF50; /* Verde */
+}
+.risposta-inviata strong.errata {
+    color: #f44336; /* Rosso */
+}
+
+/* Messaggio Attesa */
+.messaggio-attesa {
+    text-align: center;
+    padding: 3rem 1rem;
+    background-color: #1f1f1f;
+    border: 1px dashed #777;
+}
+.messaggio-attesa h2 {
+    color: #b0bec5;
+    border-bottom: none;
+}
+
+
+/* Tabella Classifica */
+.classifica-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.5rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.classifica-table th, .classifica-table td {
+    border: 1px solid #444;
+    padding: 12px 15px;
+    text-align: left;
+}
+
+.classifica-table thead th {
+    background-color: #333; /* Grigio scuro per header tabella */
+    color: #e53935; /* Rosso scuro testo header */
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.classifica-table tbody tr:nth-child(odd) {
+    background-color: #2a2a2a; /* Leggera alternanza righe */
+}
+.classifica-table tbody tr:nth-child(even) {
+    background-color: #262626;
+}
+
+.classifica-table tbody tr:hover {
+    background-color: #383838; /* Sfondo al passaggio del mouse */
+    color: #fff;
+}
+
+.classifica-table td:first-child {
+     font-weight: bold;
+     text-align: center;
+     width: 80px; /* Larghezza fissa per posizione */
+     color: #ffcc00; /* Oro per la posizione */
+}
+
+
+footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+    border-top: 1px solid #333;
+}

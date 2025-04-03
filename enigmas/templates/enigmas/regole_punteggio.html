@@ -1,0 +1,65 @@
+{% extends 'enigmas/base.html' %}
+
+{% block title %}Regole Calcolo Punteggio{% endblock %}
+
+{% block content %}
+    <h2 class="border-bottom pb-2 mb-4 display-6">
+        <i class="bi bi-calculator-fill me-2"></i>Come viene calcolato il punteggio {# Icona Opzionale #}
+    </h2>
+
+    {# Usiamo una card per contenere la spiegazione #}
+    <div class="card shadow-sm">
+        <div class="card-body p-4"> {# Più padding #}
+
+            <p class="lead"> {# Paragrafo introduttivo più grande #}
+                Benvenuto nella sezione che svela i meccanismi dietro l'assegnazione dei punti nel nostro Portale degli Enigmi. Ogni enigma risolto correttamente ti conferirà un punteggio compreso tra <strong>0 e 10 punti</strong>.
+            </p>
+
+            <h3 class="mt-4 fs-4"><i class="bi bi-clock-history me-2 text-info"></i>Il Fattore Tempo</h3>
+            <p>
+                Il concetto chiave è il <strong>tempo</strong>. Ogni enigma ha una durata massima di <strong>7 giorni</strong> (168 ore) dal momento in cui diventa attivo. Il punteggio ottenuto è inversamente proporzionale al tempo impiegato per fornire la risposta corretta:
+            </p>
+            <ul class="list-unstyled"> {# Lista senza stile di default #}
+                <li><i class="bi bi-check-lg text-success me-2"></i><strong>Risposte più rapide ottengono più punti.</strong></li>
+                <li><i class="bi bi-dash-lg text-warning me-2"></i><strong>Più ti avvicini alla scadenza, meno punti ottieni.</strong></li>
+            </ul>
+
+            <h3 class="mt-4 fs-4"><i class="bi bi-clipboard-data-fill me-2 text-info"></i>La Formula (Concettuale)</h3>
+            <p>
+                Il punteggio viene calcolato basandosi sulla frazione di tempo rimanente al momento dell'invio della risposta corretta, rispetto al tempo totale disponibile. La formula approssimativa è:
+            </p>
+            {# Blocco codice stilizzato #}
+            <pre class="bg-dark p-3 rounded my-3"><code class="text-warning language-plaintext">Punteggio ≈ 10 * (Tempo Rimanente / Tempo Totale)</code></pre>
+            <p>
+                Dove:
+            </p>
+            <ul>
+                <li><strong>Tempo Rimanente:</strong> Il tempo (in secondi) che intercorre tra il momento in cui invii la risposta corretta e la scadenza dell'enigma.</li>
+                <li><strong>Tempo Totale:</strong> La durata totale dell'enigma (7 giorni in secondi).</li>
+            </ul>
+
+            <h3 class="mt-4 fs-4"><i class="bi bi-graph-up-arrow me-2 text-info"></i>Esempi Pratici</h3>
+            <ul class="list-group list-group-flush mb-3"> {# Lista Bootstrap #}
+                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi subito: Punteggio ≈ 10.</li>
+                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi dopo 3.5 giorni: Punteggio ≈ 5.</li>
+                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi poco prima della scadenza: Punteggio ≈ 0.</li>
+            </ul>
+
+
+            <h3 class="mt-4 fs-4"><i class="bi bi-exclamation-diamond-fill me-2 text-danger"></i>Importante</h3>
+            <div class="alert alert-secondary mt-3"> {# Usiamo un alert per evidenziare #}
+                <ul class="mb-0">
+                    <li>Una <strong>risposta errata</strong> conferisce sempre <strong>0 punti</strong>.</li>
+                    <li>Una risposta inviata <strong>dopo la scadenza</strong> non è valida (<strong>0 punti</strong>).</li>
+                    <li>Il punteggio viene calcolato solo sulla <strong>prima risposta corretta</strong>.</li>
+                </ul>
+            </div>
+
+
+            <p class="mt-4 text-center fst-italic">
+                Affina la tua mente e sii rapido! Buona fortuna!
+            </p>
+
+        </div> {# fine card-body #}
+    </div> {# fine card #}
+{% endblock %}
