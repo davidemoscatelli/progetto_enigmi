@@ -262,3 +262,95 @@ footer {
     color: #666;
     border-top: 1px solid #333;
 }
+
+/* ==== Stili Magnetic Button (adattati da CodePen) ==== */
+
+/* Rimuovi/Modifica gli stili :hover precedenti per .risposta-form button, ecc. */
+.risposta-form button:hover,
+.login-form button:hover,
+.logout-button:hover {
+  /* Rimuoviamo trasformazioni/background precedenti per non confliggere */
+  background-color: initial; /* O imposta lo stesso di .magnetic-btn */
+  transform: none;
+  border-color: initial; /* O imposta lo stesso di .magnetic-btn */
+}
+
+.magnetic-btn {
+  /* Stili base - alcuni potrebbero essere già definiti, li riaffermiamo/adattiamo */
+  position: relative; /* Necessario per posizionare pseudo-elementi e usare transform */
+  overflow: hidden; /* Nasconde l'effetto che esce dai bordi */
+  display: inline-block; /* O block a seconda del contesto */
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-dark-accent); /* Sfondo base */
+  border: 1px solid var(--border-color-light);
+  border-radius: var(--border-radius-medium);
+  cursor: pointer;
+  text-decoration: none; /* Per applicarlo anche ai link <a> se necessario */
+  text-align: center;
+
+  /* Transizioni per il movimento e l'effetto */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), /* Transizione per il movimento */
+              color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+
+  /* Proprietà custom che verranno aggiornate da JS */
+  --x: 50%;
+  --y: 50%;
+}
+
+.magnetic-btn::before {
+  content: '';
+  position: absolute;
+  /* Posiziona il centro del gradiente usando le variabili JS */
+  left: var(--x);
+  top: var(--y);
+  /* Crea un cerchio grande inizialmente trasparente */
+  width: 0; /* Inizia piccolo */
+  height: 0;
+  background: radial-gradient(circle closest-side, var(--text-primary), transparent);
+  /* Centra l'origine della trasformazione */
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease; /* Transizione per l'effetto alone */
+}
+
+.magnetic-btn:hover {
+  /* Applica la trasformazione basata su JS */
+  transform: translate(calc((var(--x) - 50%) / 3), calc((var(--y) - 50%) / 3)) perspective(200px) rotateX(calc((var(--y) - 50%) / -4)) rotateY(calc((var(--x) - 50%) / 4));
+  border-color: var(--text-secondary); /* Bordo leggermente più visibile su hover */
+  color: var(--bg-dark-accent); /* Testo scuro su sfondo chiaro */
+}
+
+.magnetic-btn:hover::before {
+  /* Espande e mostra l'alone */
+  width: 300px; /* Dimensione dell'alone - aggiustabile */
+  height: 300px;
+  opacity: 0.4; /* Opacità dell'alone - aggiustabile */
+}
+
+.magnetic-btn:active {
+    /* Rimuove leggero sollevamento se c'era prima */
+    transform: scale(0.98); /* Leggero effetto pressione */
+    transition: transform 0.1s ease;
+}
+
+/* Adattamento specifico per .logout-button se ha stili diversi */
+.logout-button.magnetic-btn {
+    padding: 0.4rem 0.9rem; /* Ripristina padding specifico se necessario */
+    font-size: 0.9rem;
+    /* Assicurati che lo sfondo/bordo base siano compatibili */
+    background-color: transparent; /* Logout era trasparente */
+    border: 1px solid var(--text-secondary);
+    color: var(--text-secondary);
+}
+.logout-button.magnetic-btn:hover {
+    border-color: var(--text-primary);
+    color: var(--text-primary); /* Testo bianco su sfondo chiaro */
+}
+.logout-button.magnetic-btn:hover::before {
+     opacity: 0.2; /* Effetto più leggero per bottone trasparente */
+     background: radial-gradient(circle closest-side, var(--text-primary), transparent);
+}
