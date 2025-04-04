@@ -18,7 +18,7 @@ header {
 }
 
 header h1 {
-    color: #e53935; /* Rosso scuro per il titolo */
+    color: #ffffff; /* Rosso scuro per il titolo */
     margin: 0;
     font-size: 2.5rem;
     text-shadow: 2px 2px 4px #000;
