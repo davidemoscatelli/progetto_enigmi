@@ -27,7 +27,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = [ 
     'progetto-enigmi.onrender.com', 
-    
+    '127.0.0.1',                  
+    'localhost',      
     ]
 
 
