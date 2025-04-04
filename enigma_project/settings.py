@@ -1,3 +1,5 @@
+# enigma_project/settings.py
+
 """
 Django settings for enigma_project project.
 
@@ -10,7 +12,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+import dj_database_url # Importa dj-database-url per leggere DATABASE_URL
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,17 +23,47 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-)doda++14626%-r77-)jpwk+2w*2#6_4kztb@3_8kwrw7+&u-i'
+# --- IMPORTANTE: Carica SECRET_KEY dall'ambiente ---
+# Dovrai impostare questa variabile d'ambiente su Render con una chiave casuale e sicura.
+# Non commettere MAI la chiave segreta nel codice!
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    print("ATTENZIONE: SECRET_KEY non impostata nell'ambiente!")
+    # Puoi mettere una chiave di default SOLO per sviluppo locale SE DEBUG è True,
+    # ma è meglio usare sempre variabili d'ambiente o file .env locali.
+    # SECRET_KEY = 'chiave-solo-per-sviluppo-locale-se-proprio-devi'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = [ 
-    'progetto-enigmi.onrender.com', 
-    '127.0.0.1',                  
-    'localhost',      
-    ]
+# --- IMPORTANTE: Imposta DEBUG a False in produzione ---
+# Carica dall'ambiente, default a False se non specificato.
+# Su Render imposta la variabile d'ambiente DEBUG=False
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+
+
+# --- Configura ALLOWED_HOSTS per produzione e sviluppo ---
+# Legge gli host permessi da una variabile d'ambiente (separati da virgola)
+# e aggiunge automaticamente l'hostname di Render e quelli locali.
+ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = ALLOWED_HOSTS_ENV.split(',') if ALLOWED_HOSTS_ENV else []
+
+# Aggiungi l'hostname fornito da Render (se disponibile)
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME and RENDER_EXTERNAL_HOSTNAME not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Aggiungi host per sviluppo locale (utili anche se DEBUG=False localmente)
+if '127.0.0.1' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('127.0.0.1')
+if 'localhost' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('localhost')
+
+# Se la lista è vuota dopo tutto questo (improbabile su Render), metti almeno localhost
+if not ALLOWED_HOSTS and DEBUG:
+     ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+elif not ALLOWED_HOSTS and not DEBUG:
+     print("ATTENZIONE: ALLOWED_HOSTS è vuota in modalità non-DEBUG!")
+     # Potresti voler sollevare un errore qui o mettere un default sicuro
+     # raise ImproperlyConfigured("ALLOWED_HOSTS non può essere vuota in produzione")
 
 
 # Application definition
@@ -42,24 +76,34 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'enigmas',
+    # Aggiungi qui altre tue app o app di terze parti come:
+    # 'crispy_forms',
+    # 'allauth',
+    # 'allauth.account',
+    # 'corsheaders',
+    # 'rest_framework',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- AGGIUNGI QUESTA RIGA QUI!
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # <-- CORRETTO! Appena dopo SecurityMiddleware
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # 'django.middleware.locale.LocaleMiddleware', # Decommenta se usi i18n avanzato
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Aggiungi 'allauth' middleware se lo usi
+    # "allauth.account.middleware.AccountMiddleware",
 ]
+
 ROOT_URLCONF = 'enigma_project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'], # Aggiungi se hai una cartella templates a livello di progetto
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,12 +122,27 @@ WSGI_APPLICATION = 'enigma_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# --- IMPORTANTE: Configura il database per leggere DATABASE_URL ---
+# Render imposta automaticamente DATABASE_URL quando colleghi un database.
+# Assicurati che 'dj-database-url' sia in requirements.txt
+DATABASE_URL_ENV = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL_ENV:
+    print("INFO: Trovata variabile DATABASE_URL, si configura per PostgreSQL (o altro DB esterno).")
+    DATABASES = {
+        # Legge DATABASE_URL, richiede SSL (comune su Render) e imposta timeout connessione
+        'default': dj_database_url.config(default=DATABASE_URL_ENV, conn_max_age=600, ssl_require=True)
     }
-}
+else:
+    # Fallback SOLO per sviluppo locale se DATABASE_URL non è impostato
+    print("INFO: Variabile DATABASE_URL non trovata, si configura per SQLite locale.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    # ATTENZIONE: Questa configurazione SQLite NON verrà usata su Render se DATABASE_URL è impostato.
 
 
 # Password validation
@@ -110,27 +169,77 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'it-IT'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Rome' # Imposta il tuo fuso orario se diverso da UTC
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = True # Mantiene l'uso dei timezone (raccomandato)
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/' # URL per accedere ai file
+STATIC_ROOT = BASE_DIR / 'staticfiles' # Cartella dove collectstatic copia i file per la produzione
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
+# Configurazione Whitenoise per servire file statici in produzione
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Opzionale: directory aggiuntive dove `collectstatic` cerca file (oltre alle app)
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# Dove reindirizzare dopo il login se non specificato 'next'
-LOGIN_REDIRECT_URL = '/' # Va alla pagina principale (enigma_view)
-# Dove reindirizzare se l'utente prova ad accedere a una pagina @login_required senza essere loggato
+
+# Auth URLs
+LOGIN_REDIRECT_URL = '/' # Dove reindirizzare dopo il login se non specificato 'next'
 LOGIN_URL = 'login' # Nome dell'URL di login definito in enigmas/urls.py
 LOGOUT_REDIRECT_URL = 'login' # Dove reindirizzare dopo il logout (opzionale)
+
+
+# --- Impostazioni di Sicurezza Aggiuntive per Produzione (Dietro Proxy come Render) ---
+
+# Assicura che Django interpreti correttamente gli header X-Forwarded-* inviati da Render
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+
+# Opzionale ma raccomandato: Forza HTTPS, imposta cookie sicuri
+# Puoi controllarli con variabili d'ambiente se vuoi disabilitarli facilmente in locale
+SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'True') == 'True'
+SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True') == 'True'
+CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True') == 'True'
+
+# Aggiungi i domini fidati per le richieste POST sicure (HTTPS)
+# Legge da variabile d'ambiente (separati da virgola) e aggiunge quello di Render
+CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS_ENV.split(',') if CSRF_TRUSTED_ORIGINS_ENV else []
+
+if RENDER_EXTERNAL_HOSTNAME and f'https://{RENDER_EXTERNAL_HOSTNAME}' not in CSRF_TRUSTED_ORIGINS:
+     CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+# Aggiungi qui eventuali altri domini fidati (es. il tuo dominio personalizzato con https://)
+# if 'https://www.tuodominio.it' not in CSRF_TRUSTED_ORIGINS:
+#     CSRF_TRUSTED_ORIGINS.append('https://www.tuodominio.it')
+
+if not CSRF_TRUSTED_ORIGINS and not DEBUG:
+     print("ATTENZIONE: CSRF_TRUSTED_ORIGINS è vuota in modalità non-DEBUG!")
+     # raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS non può essere vuota in produzione")
+
+
+# Esempio: Configurazione Email (se invii email, da configurare con provider esterno)
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = os.environ.get('EMAIL_HOST')
+# EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+# EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# Impostazioni specifiche per le tue app (es. allauth, crispyforms...)
+# ...
