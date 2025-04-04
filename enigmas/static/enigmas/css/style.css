@@ -71,7 +71,7 @@ main {
 }
 
 h2, h3 {
-    color: #e53935; /* Rosso scuro per i titoli di sezione */
+    color: #ffffff; /* Rosso scuro per i titoli di sezione */
     border-bottom: 1px solid #555;
     padding-bottom: 0.5rem;
     margin-bottom: 1.5rem;
