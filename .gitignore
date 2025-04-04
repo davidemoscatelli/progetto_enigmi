@@ -1,0 +1,70 @@
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# File specifici dell'ambiente virtuale
+# (Sostituisci 'venv/' con il nome effettivo se usi un nome diverso)
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# File di configurazione locale / Segreti
+# (Carica sempre i segreti dalle variabili d'ambiente in produzione!)
+.env
+local_settings.py
+
+# Database di sviluppo locale SQLite
+# IMPORTANTE: non committare mai il tuo database di sviluppo!
+db.sqlite3
+db.sqlite3-journal
+
+# File statici raccolti (generati da collectstatic in produzione)
+# Render li gestirà durante il build, non commetterli.
+staticfiles/
+
+# File media caricati dagli utenti (dovrebbero essere su storage esterno in prod)
+media/
+
+# Log files
+*.log
+logs/
+
+# File di copertura dei test
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# File generati da Django
+*.mo
+
+# File specifici del sistema operativo
+.DS_Store # macOS
+Thumbs.db # Windows
+ehthumbs.db # Windows
+
+# File specifici di IDE / Editor
+.idea/    # PyCharm
+.vscode/  # VS Code
+*.sublime-project
+*.sublime-workspace
+
+# File di build/distribuzione Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# File di installazione pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyInstaller (se lo usi localmente)
+*.spec
+
+# File specifici Jupyter Notebook (se usati)
+.ipynb_checkpoints
