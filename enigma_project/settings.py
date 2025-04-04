@@ -25,7 +25,10 @@ SECRET_KEY = 'django-insecure-)doda++14626%-r77-)jpwk+2w*2#6_4kztb@3_8kwrw7+&u-i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [ 
+    'progetto-enigmi.onrender.com', 
+    
+    ]
 
 
 # Application definition
