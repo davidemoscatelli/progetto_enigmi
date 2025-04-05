@@ -6,7 +6,7 @@ __pycache__/
 
 # File specifici dell'ambiente virtuale
 # (Sostituisci 'venv/' con il nome effettivo se usi un nome diverso)
-venv/
+test/
 .venv/
 env/
 .env/
