@@ -7,7 +7,7 @@ urlpatterns = [
     path('', views.enigma_view, name='enigma_view'), # Pagina principale con l'enigma
     path('classifica/', views.classifica_view, name='classifica'),
     path('regole-punteggio/', views.regole_punteggio_view, name='regole_punteggio'),
-
+    path('enigma/<int:enigma_id>/suggerimento/', views.richiedi_suggerimento, name='richiedi_suggerimento'),
     # URLs di Autenticazione
     # Usiamo la nostra vista custom per il template di login
     path('login/', views.CustomLoginView.as_view(), name='login'),

@@ -1,63 +1,77 @@
 {% extends 'enigmas/base.html' %}
+{% load static %} {# Rimosso commento, load static è utile #}
 
-{% block title %}Regole Calcolo Punteggio{% endblock %}
+{% block title %}Regolamento e Punteggio{% endblock %}
 
 {% block content %}
     <h2 class="border-bottom pb-2 mb-4 display-6">
-        <i class="bi bi-calculator-fill me-2"></i>Come viene calcolato il punteggio {# Icona Opzionale #}
+        <i class="bi bi-calculator-fill me-2"></i>Regolamento e Punteggio
     </h2>
 
-    {# Usiamo una card per contenere la spiegazione #}
-    <div class="card shadow-sm">
-        <div class="card-body p-4"> {# Più padding #}
+    {# Card principale #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body p-4">
 
-            <p class="lead"> {# Paragrafo introduttivo più grande #}
-                Benvenuto nella sezione che svela i meccanismi dietro l'assegnazione dei punti nel nostro Portale degli Enigmi. Ogni enigma risolto correttamente ti conferirà un punteggio compreso tra <strong>0 e 10 punti</strong>.
+            <p class="lead">
+                Benvenuto Sfidante! Questa sezione svela i meccanismi dietro l'assegnazione dei punti nel Portale degli Enigmi. Risolvere correttamente gli enigmi ti farà guadagnare punti preziosi, ma attenzione: anche l'uso dei suggerimenti influenzerà il tuo punteggio finale!
             </p>
 
-            <h3 class="mt-4 fs-4"><i class="bi bi-clock-history me-2 text-info"></i>Il Fattore Tempo</h3>
+            <hr class="my-4"> {# Separatore #}
+
+            <h3 class="mt-4 fs-4"><i class="bi bi-clock-history me-2 text-info"></i>Il Fattore Tempo (Punteggio Base)</h3>
             <p>
-                Il concetto chiave è il <strong>tempo</strong>. Ogni enigma ha una durata massima di <strong>7 giorni</strong> (168 ore) dal momento in cui diventa attivo. Il punteggio ottenuto è inversamente proporzionale al tempo impiegato per fornire la risposta corretta:
+                Il concetto chiave è il <strong>tempo</strong>. Ogni enigma dura esattamente <strong>7 giorni</strong> (168 ore) dal momento del rilascio. Il punteggio base ottenuto (prima di considerare i suggerimenti) dipende da quanto rapidamente fornisci la **prima risposta corretta**:
             </p>
-            <ul class="list-unstyled"> {# Lista senza stile di default #}
-                <li><i class="bi bi-check-lg text-success me-2"></i><strong>Risposte più rapide ottengono più punti.</strong></li>
-                <li><i class="bi bi-dash-lg text-warning me-2"></i><strong>Più ti avvicini alla scadenza, meno punti ottieni.</strong></li>
+            <ul class="list-unstyled ms-3"> {# Aggiunto margine #}
+                <li><i class="bi bi-check-lg text-success me-2"></i><strong>Risposte più rapide ottengono un punteggio base più alto</strong> (vicino a 10).</li>
+                <li><i class="bi bi-dash-lg text-warning me-2"></i><strong>Più ti avvicini alla scadenza, più basso sarà il punteggio base</strong> (vicino a 0).</li>
             </ul>
-
-            <h3 class="mt-4 fs-4"><i class="bi bi-clipboard-data-fill me-2 text-info"></i>La Formula (Concettuale)</h3>
-            <p>
-                Il punteggio viene calcolato basandosi sulla frazione di tempo rimanente al momento dell'invio della risposta corretta, rispetto al tempo totale disponibile. La formula approssimativa è:
+            <p class="mt-2">
+                La formula concettuale per il punteggio base è:
             </p>
-            {# Blocco codice stilizzato #}
-            <pre class="bg-dark p-3 rounded my-3"><code class="text-warning language-plaintext">Punteggio ≈ 10 * (Tempo Rimanente / Tempo Totale)</code></pre>
-            <p>
-                Dove:
-            </p>
+            <pre class="bg-dark p-3 rounded my-3"><code class="text-warning language-plaintext">Punteggio Base ≈ 10 * (Tempo Rimanente / Tempo Totale)</code></pre>
             <ul>
-                <li><strong>Tempo Rimanente:</strong> Il tempo (in secondi) che intercorre tra il momento in cui invii la risposta corretta e la scadenza dell'enigma.</li>
-                <li><strong>Tempo Totale:</strong> La durata totale dell'enigma (7 giorni in secondi).</li>
+                <li><strong>Tempo Rimanente:</strong> Secondi tra l'invio della risposta corretta e la scadenza dei 7 giorni.</li>
+                <li><strong>Tempo Totale:</strong> 7 giorni (in secondi).</li>
             </ul>
+            <p class="text-muted fst-italic small">Esempi (senza considerare i suggerimenti): Rispondere subito ≈ 10 punti; Rispondere a metà tempo ≈ 5 punti; Rispondere alla fine ≈ 0 punti.</p>
 
-            <h3 class="mt-4 fs-4"><i class="bi bi-graph-up-arrow me-2 text-info"></i>Esempi Pratici</h3>
-            <ul class="list-group list-group-flush mb-3"> {# Lista Bootstrap #}
-                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi subito: Punteggio ≈ 10.</li>
-                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi dopo 3.5 giorni: Punteggio ≈ 5.</li>
-                 <li class="list-group-item bg-transparent"><i class="bi bi-arrow-right-short"></i> Se rispondi poco prima della scadenza: Punteggio ≈ 0.</li>
+            <hr class="my-4"> {# Separatore #}
+
+            {# --- NUOVA SEZIONE SUGGERIMENTI --- #}
+            <h3 class="mt-4 fs-4"><i class="bi bi-lightbulb-fill me-2 text-info"></i>Sistema di Suggerimenti (Hints)</h3>
+             <p>
+                 Sei bloccato su un enigma particolarmente ostico? L'Enigmista concede un piccolo aiuto, ma a un prezzo!
+             </p>
+            <ul class="list-unstyled ms-3">
+                <li><i class="bi bi-check-lg text-success me-2"></i>Puoi richiedere fino a un massimo di **3 suggerimenti** per ogni enigma.</li>
+                <li><i class="bi bi-check-lg text-success me-2"></i>Richiedili tramite l'apposito pulsante sulla pagina dell'enigma attivo.</li>
+                <li><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>**Penalità:** Ogni suggerimento richiesto **riduce il punteggio ottenuto per quell'enigma del 10%**. La riduzione è cumulativa.</li>
             </ul>
+             <h4 class="mt-3 fs-5"><i class="bi bi-calculator text-secondary me-2"></i>Esempio Calcolo Penalità:</h4>
+             <p>Supponiamo che il tuo tempo di risposta ti dia diritto a un punteggio base di <strong>8.5</strong> punti:</p>
+             <ul class="list-group list-group-flush mb-3">
+                <li class="list-group-item bg-transparent"><strong class="text-warning">1 Suggerimento Usato:</strong> Penalità 10%. Punteggio Finale = 8.5 * (1 - 0.10) = <strong>7.65</strong> punti.</li>
+                <li class="list-group-item bg-transparent"><strong class="text-warning">2 Suggerimenti Usati:</strong> Penalità 20%. Punteggio Finale = 8.5 * (1 - 0.20) = <strong>6.80</strong> punti.</li>
+                <li class="list-group-item bg-transparent"><strong class="text-warning">3 Suggerimenti Usati:</strong> Penalità 30%. Punteggio Finale = 8.5 * (1 - 0.30) = <strong>5.95</strong> punti.</li>
+             </ul>
+             <p class="fst-italic">Rifletti bene prima di chiedere aiuto!</p>
+            {# --- FINE NUOVA SEZIONE --- #}
 
+            <hr class="my-4"> {# Separatore #}
 
-            <h3 class="mt-4 fs-4"><i class="bi bi-exclamation-diamond-fill me-2 text-danger"></i>Importante</h3>
-            <div class="alert alert-secondary mt-3"> {# Usiamo un alert per evidenziare #}
+            <h3 class="mt-4 fs-4"><i class="bi bi-clipboard-check-fill me-2 text-info"></i>Note Finali sul Punteggio</h3>
+            <div class="alert alert-secondary mt-3">
                 <ul class="mb-0">
-                    <li>Una <strong>risposta errata</strong> conferisce sempre <strong>0 punti</strong>.</li>
-                    <li>Una risposta inviata <strong>dopo la scadenza</strong> non è valida (<strong>0 punti</strong>).</li>
-                    <li>Il punteggio viene calcolato solo sulla <strong>prima risposta corretta</strong>.</li>
+                    <li>Il punteggio finale visibile in classifica e nel tuo profilo tiene già conto delle eventuali penalità per i suggerimenti.</li>
+                    <li>Una <strong>risposta errata</strong> non dà penalità diretta, ma fa perdere tempo prezioso per ottenere un punteggio base alto.</li>
+                    <li>Una risposta inviata <strong>dopo la scadenza</strong> dell'enigma vale sempre **0 punti**.</li>
+                    <li>Solo la **prima risposta corretta** inviata per un enigma contribuisce al tuo punteggio e alla classifica.</li>
                 </ul>
             </div>
 
-
-            <p class="mt-4 text-center fst-italic">
-                Affina la tua mente e sii rapido! Buona fortuna!
+            <p class="mt-4 text-center fw-bold fs-5">
+                Ora conosci le regole. Affina la tua mente, sii rapido e scala la classifica!
             </p>
 
         </div> {# fine card-body #}

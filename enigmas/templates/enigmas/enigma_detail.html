@@ -1,94 +1,125 @@
 {% extends 'enigmas/base.html' %}
+{% load static %}
 
 {% block title %}Enigma Corrente{% endblock %}
 
 {% block content %}
     {# Titolo della pagina #}
-    <h2 class="border-bottom pb-2 mb-4 display-6"> {# Stile titolo Bootstrap #}
-        <i class="bi bi-puzzle me-2"></i>Enigma Corrente {# Icona Opzionale #}
+    <h2 class="border-bottom pb-2 mb-4 display-6">
+        <i class="bi bi-puzzle me-2"></i>Enigma Corrente
     </h2>
 
     {% if enigma %}
-        {% if not risposta_precedente %}
-            <div class="text-center mb-4 p-3 bg-body-tertiary rounded shadow-sm"> {# Stile contenitore timer #}
+        {# Timer - Mostrato solo se la flag mostra_timer è True #}
+        {% if mostra_timer %}
+            <div class="text-center mb-4 p-3 bg-body-tertiary rounded shadow-sm">
                 <h3 class="fs-5 text-body-secondary mb-2">Tempo Rimanente:</h3>
-                {# Timer con stile custom definito in base.html #}
                 <div id="countdown-timer" data-endtime="{{ tempo_rimanente_ms }}">--:--:--:--</div>
             </div>
+        {% endif %}
 
-            {# Card Bootstrap per l'enigma #}
-            <div class="card mb-4 shadow-sm">
-              <div class="card-header">
-                  <h3 class="card-title fs-4 mb-0">{{ enigma.titolo|default:"Enigma" }}</h3>
-              </div>
-              <div class="card-body">
-                {# Usiamo card-text per il paragrafo #}
+        {# Card Enigma #}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header">
+                <h3 class="card-title fs-4 mb-0">{{ enigma.titolo|default:"Enigma" }}</h3>
+            </div>
+            <div class="card-body">
                 <p class="card-text fs-5" style="white-space: pre-wrap;">{{ enigma.testo|linebreaksbr }}</p>
-              </div>
             </div>
+        </div>
 
-            {# Form con stile Bootstrap #}
-            <div class="card shadow-sm">
-              <div class="card-body">
-                  <h4 class="card-title fs-5 mb-3">Invia la tua soluzione</h4>
-                  <form method="post">
-                      {% csrf_token %}
-                      {# Applica classi Bootstrap ai campi del form #}
-                      <div class="mb-3">
-                          <label for="{{ form.risposta_inserita.id_for_label }}" class="form-label">{{ form.risposta_inserita.label }}</label>
-                          {# Aggiungiamo la classe form-control all'input #}
-                          <input type="text"
-                                 name="{{ form.risposta_inserita.name }}"
-                                 id="{{ form.risposta_inserita.id_for_label }}"
-                                 class="form-control form-control-lg {% if form.risposta_inserita.errors %}is-invalid{% endif %}" {# Aggiunto form-control-lg per dimensione #}
-                                 placeholder="Inserisci qui la soluzione..."
-                                 maxlength="{{ form.risposta_inserita.field.max_length }}"
-                                 required>
-                          {% if form.risposta_inserita.errors %}
-                              <div class="invalid-feedback">
-                                  {{ form.risposta_inserita.errors|striptags }}
-                              </div>
-                          {% endif %}
-                      </div>
-                      <button type="submit" class="btn btn-danger btn-lg w-100"> {# Bottone grande e rosso custom #}
-                          <i class="bi bi-send-fill me-2"></i>Invia Risposta
-                      </button>
-                  </form>
-              </div>
-            </div>
-
-        {% else %}
-            {# Mostra l'enigma anche se ha risposto #}
-             <div class="card mb-4 shadow-sm">
-               <div class="card-header">
-                   <h3 class="card-title fs-4 mb-0">{{ enigma.titolo|default:"Enigma" }}</h3>
-               </div>
-               <div class="card-body">
-                 <p class="card-text fs-5" style="white-space: pre-wrap;">{{ enigma.testo|linebreaksbr }}</p>
-               </div>
-             </div>
-
-             {# Alert Bootstrap per indicare che ha già risposto #}
-             <div class="alert {% if risposta_precedente.is_corretta %}alert-success{% else %}alert-danger{% endif %} shadow-sm" role="alert">
-                <h4 class="alert-heading">
-                    {% if risposta_precedente.is_corretta %}<i class="bi bi-check-circle-fill me-2"></i>Risposta Inviata!{% else %}<i class="bi bi-x-octagon-fill me-2"></i>Risposta Inviata{% endif %}
+        {# Sezione Suggerimenti #}
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+                <h4 class="card-title fs-5 mb-3">
+                    <i class="bi bi-lightbulb me-2"></i>Suggerimenti
                 </h4>
-                <p>
-                    Hai già inviato la tua risposta per questo enigma: <strong>{{ risposta_precedente.risposta_inserita }}</strong>
-                </p>
-                <hr>
-                <p class="mb-0">
-                    Esito:
-                    <strong>
-                        {% if risposta_precedente.is_corretta %}
-                            Corretta! Hai ottenuto {{ risposta_precedente.punteggio|floatformat:2 }} punti.
-                        {% else %}
-                            Errata.
-                        {% endif %}
-                    </strong>
-                    Attendi la fine dell'enigma e il prossimo!
-                 </p>
+
+                {# Mostra suggerimenti usati #}
+                <div id="suggerimenti-usati-lista">
+                    {% if suggerimenti_visti %}
+                        <ul class="list-group list-group-flush mb-3">
+                            {% for testo_hint in suggerimenti_visti %}
+                                <li class="list-group-item"><em>{{ testo_hint }}</em></li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-body-secondary"><em>Nessun suggerimento richiesto finora.</em></p>
+                    {% endif %}
+                </div>
+
+                {# Blocco condizionale SEMPLIFICATO per pulsante hint #}
+                {% if user.is_authenticated %} {# Sappiamo che c'è un enigma dal blocco esterno #}
+                    {% if risposta_utente_corretta %}
+                        <p class="text-success"><em>Hai già risolto l'enigma!</em></p>
+                    {% elif puo_chiedere_hint %} {# Usa la flag calcolata nella view #}
+                        <form id="hint-form" method="post" action="{% url 'richiedi_suggerimento' enigma.id %}" data-max-hints="{{ max_suggerimenti }}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-warning btn-sm">
+                                <i class="bi bi-question-circle me-1"></i>Richiedi Suggerimento ({{ suggerimenti_usati_count }}/{{ max_suggerimenti }} usati)
+                            </button>
+                        </form>
+                    {% elif suggerimenti_usati_count >= max_suggerimenti %}
+                         {# Mostra questo solo se non può chiedere hint E ha raggiunto il max #}
+                        <p class="text-warning"><em>Hai usato tutti i {{ max_suggerimenti }} suggerimenti disponibili.</em></p>
+                    {% endif %}
+                {% endif %}
+                {# --- FINE BLOCCO CONDIZIONALE HINT --- #}
+
+                {# Area risposta AJAX hint #}
+                <div id="hint-response" class="mt-3"></div>
             </div>
+        </div>
+
+        {# Mostra form risposta OPPURE stato risposta precedente #}
+        {% if mostra_form_risposta %} {# Usa la flag calcolata nella view #}
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="card-title fs-5 mb-3">Invia la tua soluzione</h4>
+                    <form method="post" action="{% url 'enigma_view' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            {% with form.risposta_inserita as field %}
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                <input type="text"
+                                       name="{{ field.name }}"
+                                       id="{{ field.id_for_label }}"
+                                       class="form-control form-control-lg {% if field.errors %}is-invalid{% endif %}"
+                                       placeholder="Inserisci qui la soluzione..."
+                                       maxlength="{{ field.field.max_length|default:255 }}"
+                                       required>
+                                {% if field.errors %}
+                                    <div class="invalid-feedback">
+                                        {{ field.errors|striptags }}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <button type="submit" class="btn btn-danger btn-lg w-100 magnetic-btn">
+                            <i class="bi bi-send-fill me-2"></i>Invia Risposta
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% elif utente_ha_risposto %} {# Mostra se esiste una risposta precedente (corretta o errata) #}
+             <div class="alert {% if risposta_precedente.is_corretta %}alert-success{% else %}alert-danger{% endif %} shadow-sm" role="alert">
+                 <h4 class="alert-heading">
+                     {% if risposta_precedente.is_corretta %}<i class="bi bi-check-circle-fill me-2"></i>Risposta Inviata!{% else %}<i class="bi bi-x-octagon-fill me-2"></i>Risposta Inviata{% endif %}
+                 </h4>
+                 <p>Hai già inviato la tua risposta: <strong>{{ risposta_precedente.risposta_inserita }}</strong></p>
+                 <hr>
+                 <p class="mb-0">
+                     Esito:
+                     <strong>
+                         {% if risposta_precedente.is_corretta %}
+                             Corretta! Punti: {{ risposta_precedente.punteggio|floatformat:2 }} {% if risposta_precedente.suggerimenti_usati > 0 %}(usando {{ risposta_precedente.suggerimenti_usati }} suggeriment{{ risposta_precedente.suggerimenti_usati|pluralize:'o,i' }}){% endif %}.
+                         {% else %}
+                             Errata.
+                         {% endif %}
+                     </strong>
+                     Attendi il prossimo enigma!
+                  </p>
+             </div>
         {% endif %}
 
     {% elif messaggio_attesa %}
@@ -100,62 +131,144 @@
 {% endblock %}
 
 {% block extra_scripts %}
-    {# Lo script del timer rimane invariato, ma assicurati che l'ID "countdown-timer" esista ancora #}
-    {% if enigma and not risposta_precedente and tempo_rimanente_ms > 0 %}
+    {# Script Timer - Incluso solo se la flag mostra_timer è True #}
+    {% if mostra_timer %}
     <script>
-        // Il tuo codice Javascript per il timer va qui (nessuna modifica necessaria)
         function startCountdown(durationMs) {
             const timerElement = document.getElementById('countdown-timer');
             if (!timerElement) return;
-
             let remainingTime = durationMs;
+            const answerForm = document.querySelector('form[action="{% url 'enigma_view' %}"]');
+            const formButton = answerForm ? answerForm.querySelector('button[type="submit"]') : null;
+            const hintButton = document.querySelector('#hint-form button'); // Seleziona bottone hint
 
             function updateTimer() {
                 if (remainingTime <= 0) {
                     timerElement.textContent = "Tempo Scaduto!";
-                    const formButton = document.querySelector('form button[type="submit"]');
                     if (formButton) {
                         formButton.disabled = true;
-                        formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto'; // Update icon/text
+                        formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto';
                     }
+                    if(hintButton) hintButton.disabled = true; // Disabilita anche hint
                     clearInterval(intervalId);
                     return;
                 }
-
                 remainingTime -= 1000;
-
-                const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
-
-                const displayDays = String(days).padStart(2, '0');
-                const displayHours = String(hours).padStart(2, '0');
-                const displayMinutes = String(minutes).padStart(2, '0');
-                const displaySeconds = String(seconds).padStart(2, '0');
-
-                timerElement.textContent = `${displayDays}:${displayHours}:${displayMinutes}:${displaySeconds}`;
+                 const days = Math.floor(remainingTime / (1000 * 60 * 60 * 24));
+                 const hours = Math.floor((remainingTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                 const minutes = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+                 const seconds = Math.floor((remainingTime % (1000 * 60)) / 1000);
+                 timerElement.textContent = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             }
-
             updateTimer();
             const intervalId = setInterval(updateTimer, 1000);
         }
-
         const timerDiv = document.getElementById('countdown-timer');
-        const endTimeMs = parseInt(timerDiv.getAttribute('data-endtime'), 10);
-
-        if (!isNaN(endTimeMs) && endTimeMs > 0) {
-             startCountdown(endTimeMs);
-        } else if (endTimeMs <= 0) { // Handle case where it's already expired on load
-             timerDiv.textContent = "Tempo Scaduto!";
-             const formButton = document.querySelector('form button[type="submit"]');
-             if (formButton) {
-                 formButton.disabled = true;
-                 formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto';
+        if (timerDiv) {
+             const endTimeMs = parseInt(timerDiv.getAttribute('data-endtime'), 10);
+             if (!isNaN(endTimeMs) && endTimeMs > 0) {
+                  startCountdown(endTimeMs);
+             } else { // Gestisce sia <= 0 che NaN
+                 timerDiv.textContent = "Tempo Scaduto!";
+                 const answerForm = document.querySelector('form[action="{% url 'enigma_view' %}"]');
+                 const formButton = answerForm ? answerForm.querySelector('button[type="submit"]') : null;
+                 if (formButton) {
+                      formButton.disabled = true;
+                      formButton.innerHTML = '<i class="bi bi-clock-history me-2"></i>Tempo Scaduto';
+                 }
+                 const hintButton = document.querySelector('#hint-form button');
+                 if(hintButton) hintButton.disabled = true;
              }
-        } else {
-            timerDiv.textContent = "--:--:--:--"; // Fallback
         }
     </script>
     {% endif %}
+
+    {# Script AJAX Hint - Incluso solo se l'utente è autenticato e c'è un enigma #}
+    {% if user.is_authenticated and enigma %}
+    <script>
+        // Lo script AJAX per hint-form rimane identico a prima
+        const hintForm = document.getElementById('hint-form');
+        if (hintForm) {
+            hintForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const form = event.target;
+                const url = form.action;
+                const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                const hintResponseDiv = document.getElementById('hint-response');
+                const hintButton = form.querySelector('button');
+                const maxHints = parseInt(form.dataset.maxHints || '3', 10);
+
+                hintButton.disabled = true;
+                hintButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Richiesta...';
+                hintResponseDiv.innerHTML = '';
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                })
+                .then(response => {
+                    if (!response.ok) {
+                         return response.json().then(errData => { throw new Error(errData.error || `Errore ${response.status}`); })
+                                          .catch(() => { throw new Error(`Errore ${response.status}`); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                         let hintListContainer = document.getElementById('suggerimenti-usati-lista');
+                         let hintList = hintListContainer.querySelector('ul');
+                         if (!hintList) {
+                             hintListContainer.innerHTML = '<ul class="list-group list-group-flush mb-3"></ul>';
+                             hintList = hintListContainer.querySelector('ul');
+                         }
+                         const noHintP = hintListContainer.querySelector('p');
+                         if(noHintP) noHintP.remove();
+
+                        const newHintItem = document.createElement('li');
+                        newHintItem.classList.add('list-group-item');
+                        newHintItem.innerHTML = `<em>${data.testo_suggerimento}</em>`;
+                        hintList.appendChild(newHintItem);
+
+                        const nuoviHintUsati = data.suggerimenti_usati_ora;
+                        hintButton.innerHTML = `<i class="bi bi-question-circle me-1"></i>Richiedi Suggerimento (${nuoviHintUsati}/${maxHints} usati)`;
+                        // Aggiorna anche il conteggio globale per la logica del template se servisse ricaricarla parzialmente
+                        // (non strettamente necessario con questo flusso)
+                        // document.body.dataset.suggerimentiUsatiCount = nuoviHintUsati;
+
+                        if (nuoviHintUsati >= maxHints) {
+                            hintButton.disabled = true;
+                            hintButton.innerHTML = '<i class="bi bi-slash-circle me-1"></i>Massimo suggerimenti usati';
+                        } else {
+                             hintButton.disabled = false;
+                        }
+                    } else {
+                         hintResponseDiv.innerHTML = `<div class="alert alert-warning alert-dismissible fade show" role="alert"> ${data.error || 'Si è verificato un problema.'} <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> </div>`;
+                         if(data.error && !(data.error.includes("tutti") || data.error.includes("scaduto") || data.error.includes("correttamente"))) {
+                           hintButton.disabled = false;
+                           const usedCountElement = hintButton.textContent.match(/\((\d+)\//);
+                           let currentUsed = usedCountElement ? parseInt(usedCountElement[1], 10) : 0;
+                           hintButton.innerHTML = `<i class="bi bi-question-circle me-1"></i>Richiedi Suggerimento (${currentUsed}/${maxHints} usati)`;
+                         } else {
+                            hintButton.disabled = true;
+                            hintButton.innerHTML = `<i class="bi bi-slash-circle me-1"></i>Non disponibile`;
+                         }
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore Fetch:', error);
+                    hintResponseDiv.innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert"> Errore di rete o del server. Riprova. <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button> </div>`;
+                     hintButton.disabled = false;
+                     const usedCountElement = hintButton.textContent.match(/\((\d+)\//);
+                     let currentUsed = usedCountElement ? parseInt(usedCountElement[1], 10) : 0;
+                     hintButton.innerHTML = `<i class="bi bi-question-circle me-1"></i>Richiedi Suggerimento (${currentUsed}/${maxHints} usati)`;
+                });
+            });
+        }
+    </script>
+    {% endif %}
+
 {% endblock %}
