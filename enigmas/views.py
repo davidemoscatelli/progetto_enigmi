@@ -22,6 +22,13 @@ def enigma_view(request):
     suggerimenti_visti = []
     suggerimenti_usati_count = 0
     max_suggerimenti = 3
+    form = None # Inizializza anche il form
+    mostra_timer = False
+    mostra_interfaccia_risposta = False
+    utente_ha_risposto = False
+    risposta_utente_corretta = False
+    puo_chiedere_hint = False
+    ultimo_messaggio_enigmista = None 
 
     # Trova l'enigma attivo e valido
     try:
