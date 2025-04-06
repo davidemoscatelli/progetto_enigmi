@@ -11,7 +11,7 @@ class Enigma(models.Model):
     start_time = models.DateTimeField(help_text="Data e ora di inizio visibilità dell'enigma")
     end_time = models.DateTimeField(editable=False)
     is_active = models.BooleanField(default=False, help_text="Seleziona per rendere questo l'enigma corrente (assicurati che solo uno sia attivo!)")
-
+    notifica_inviata = models.BooleanField(default=False, help_text="Indica se la notifica per questo enigma è già stata inviata")
     def save(self, *args, **kwargs):
         self.end_time = self.start_time + datetime.timedelta(days=7)
         if self.is_active:
@@ -156,3 +156,40 @@ class UserBadge(models.Model):
         ordering = ['-data_ottenimento']
         verbose_name = "Badge Utente"
         verbose_name_plural = "Badges Utenti"
+    
+class Notifica(models.Model):
+    # Tipi di notifica per poterle filtrare o mostrare icone diverse
+    TIPO_NUOVO_ENIGMA = 'ENIGMA'
+    TIPO_BADGE_OTTENUTO = 'BADGE'
+    TIPO_GENERALE = 'INFO'
+    TIPI_NOTIFICA_CHOICES = [
+        (TIPO_NUOVO_ENIGMA, 'Nuovo Enigma'),
+        (TIPO_BADGE_OTTENUTO, 'Badge Ottenuto'),
+        (TIPO_GENERALE, 'Generale'),
+    ]
+
+    # Utente a cui è destinata la notifica
+    utente = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifiche')
+    # Messaggio della notifica
+    messaggio = models.TextField()
+    # Data e ora di creazione
+    data_creazione = models.DateTimeField(auto_now_add=True)
+    # Flag per indicare se l'utente l'ha letta
+    letta = models.BooleanField(default=False, db_index=True) # db_index aiuta a filtrare velocemente le non lette
+    # Tipo di notifica (opzionale ma utile)
+    tipo_notifica = models.CharField(
+        max_length=10,
+        choices=TIPI_NOTIFICA_CHOICES,
+        default=TIPO_GENERALE
+    )
+    # Link opzionale a cui porta la notifica (es. pagina enigma, profilo)
+    link = models.URLField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        stato = "[Letta]" if self.letta else "[Non Letta]"
+        return f"{stato} Notifica per {self.utente.username}: {self.messaggio[:50]}..."
+
+    class Meta:
+        ordering = ['-data_creazione'] # Mostra le più recenti prima
+        verbose_name = "Notifica"
+        verbose_name_plural = "Notifiche"

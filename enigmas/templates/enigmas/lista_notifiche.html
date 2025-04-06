@@ -1,0 +1,43 @@
+{% extends 'enigmas/base.html' %}
+{% load static %}
+
+{% block title %}Le Tue Notifiche{% endblock %}
+
+{% block content %}
+<h2 class="border-bottom pb-2 mb-4 display-6">
+    <i class="bi bi-bell me-2"></i>Le Tue Notifiche
+</h2>
+
+<div class="list-group shadow-sm">
+    {% for notifica in notifiche %}
+        {# Linka se c'è un link, altrimenti è solo testo #}
+        <a href="{{ notifica.link|default:'#' }}" class="list-group-item list-group-item-action d-flex gap-3 py-3 {% if not notifica.letta %}list-group-item-secondary fw-bold{% endif %}" aria-current="true">
+
+            {# Icona basata sul tipo #}
+            <span class="fs-3">
+            {% if notifica.tipo_notifica == notifica.TIPO_NUOVO_ENIGMA %}
+                <i class="bi bi-puzzle text-primary"></i>
+            {% elif notifica.tipo_notifica == notifica.TIPO_BADGE_OTTENUTO %}
+                <i class="bi bi-award text-warning"></i>
+            {% else %}
+                 <i class="bi bi-info-circle text-info"></i>
+            {% endif %}
+            </span>
+
+            <div class="d-flex gap-2 w-100 justify-content-between">
+                <div>
+                    <p class="mb-0 opacity-75">{{ notifica.messaggio }}</p>
+                </div>
+                <small class="opacity-50 text-nowrap">{{ notifica.data_creazione|timesince }} fa</small> {# Mostra quanto tempo fa #}
+            </div>
+        </a>
+    {% empty %}
+        <div class="list-group-item">
+            <p class="text-center text-body-secondary my-3"><em>Non hai nessuna notifica al momento.</em></p>
+        </div>
+    {% endfor %}
+</div>
+
+{# Aggiungere paginazione qui se le notifiche diventano molte #}
+
+{% endblock %}

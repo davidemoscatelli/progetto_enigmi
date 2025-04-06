@@ -20,4 +20,5 @@ urlpatterns = [
     # path('register/', views.register_view, name='register'),
     # path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),
     # ... ecc ...
+    path('notifiche/', views.lista_notifiche, name='lista_notifiche'),
 ]

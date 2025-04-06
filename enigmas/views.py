@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages # Per mostrare messaggi all'utente
-from .models import Enigma, RispostaUtente, Suggerimento, UserBadge
+from .models import Enigma, RispostaUtente, Suggerimento, UserBadge, Notifica
 from .forms import RispostaForm # Creeremo questo form tra poco
 from django.contrib.auth.models import User
 from django.http import JsonResponse, Http404, HttpResponseForbidden
@@ -285,3 +285,25 @@ def my_profile_view(request):
     """Reindirizza alla pagina del profilo dell'utente loggato."""
     # Questo evita di dover passare l'username nell'URL per il proprio profilo
     return redirect('profile_view', username=request.user.username)
+
+@login_required
+def lista_notifiche(request):
+    """
+    Mostra l'elenco delle notifiche per l'utente loggato
+    e le segna tutte come lette.
+    """
+    # Recupera tutte le notifiche, le più recenti prima
+    notifiche = Notifica.objects.filter(utente=request.user).order_by('-data_creazione')
+
+    # Segna come lette quelle non ancora lette PRIMA di passarle al template
+    # Così nel template possiamo ancora distinguerle se vogliamo, ma il contatore si azzererà
+    unread_notifications = notifiche.filter(letta=False)
+    unread_notifications_count_now = unread_notifications.count() # Conteggio prima di aggiornare
+    if unread_notifications_count_now > 0:
+        unread_notifications.update(letta=True)
+        print(f"INFO: Segnate {unread_notifications_count_now} notifiche come lette per {request.user.username}")
+
+    context = {
+        'notifiche': notifiche
+    }
+    return render(request, 'enigmas/lista_notifiche.html', context)

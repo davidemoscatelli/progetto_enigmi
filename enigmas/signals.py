@@ -2,7 +2,9 @@
 from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 from django.dispatch import receiver
-from .models import Profile, RispostaUtente, Badge, UserBadge
+from django.utils import timezone
+from django.urls import reverse
+from .models import Profile, RispostaUtente, Badge, UserBadge, Notifica, Enigma
 
 @receiver(post_save, sender=User)
 def crea_o_aggiorna_profilo_utente(sender, instance, created, **kwargs):
@@ -93,3 +95,54 @@ def check_and_award_badges(sender, instance, created, **kwargs):
     if instance.punteggio >= 9.5 and instance.suggerimenti_usati == 0:
         award_badge(utente, "Punteggio Quasi Perfetto", earned_badges)
 
+
+@receiver(post_save, sender=Enigma)
+def crea_notifica_nuovo_enigma(sender, instance, created, **kwargs):
+    """
+    Crea notifiche in-app per gli utenti quando un enigma
+    diventa attivo e la notifica non è ancora stata inviata.
+    """
+    # Condizioni per inviare: Enigma attivo, start_time passato, notifica non già inviata
+    if instance.is_active and instance.start_time <= timezone.now() and not instance.notifica_inviata:
+        print(f"INFO: Rilevato enigma attivo e non notificato: {instance.titolo}. Creazione notifiche...")
+
+        # Trova gli utenti a cui inviare (escludiamo admin per ora)
+        # TODO: Aggiungere filtro per preferenze utente se implementato
+        utenti_da_notificare = User.objects.filter(is_active=True, is_superuser=False)
+
+        if not utenti_da_notificare.exists():
+            print("INFO: Nessun utente da notificare.")
+            # Marco comunque come inviata per non riprovare? Sì.
+            Enigma.objects.filter(pk=instance.pk).update(notifica_inviata=True)
+            return
+
+        # Prepara il messaggio e il link (link alla pagina principale dell'enigma)
+        messaggio = f"È uscito un nuovo enigma: '{instance.titolo or 'Senza Titolo'}'! Mettiti alla prova."
+        try:
+            # Assumendo che 'enigma_view' sia l'URL che mostra l'enigma attivo
+            link_notifica = reverse('enigma_view')
+        except Exception:
+            link_notifica = "/" # Fallback alla home generica
+
+        # Crea le notifiche in modo efficiente con bulk_create
+        notifiche_da_creare = [
+            Notifica(
+                utente=utente,
+                messaggio=messaggio,
+                tipo_notifica=Notifica.TIPO_NUOVO_ENIGMA,
+                link=link_notifica
+            )
+            for utente in utenti_da_notificare
+        ]
+
+        try:
+            Notifica.objects.bulk_create(notifiche_da_creare)
+            print(f"INFO: Create {len(notifiche_da_creare)} notifiche per enigma '{instance.titolo}'.")
+
+            # IMPORTANTE: Aggiorna il flag sull'enigma per non inviare più notifiche
+            # Usiamo .update() sull'oggetto queryset filtrato per pk
+            # per evitare di richiamare il segnale post_save all'infinito!
+            Enigma.objects.filter(pk=instance.pk).update(notifica_inviata=True)
+
+        except Exception as e:
+            print(f"ERRORE durante bulk_create o update per notifiche enigma '{instance.titolo}': {e}")
