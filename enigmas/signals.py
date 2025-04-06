@@ -43,30 +43,22 @@ def check_and_award_badges(sender, instance, created, **kwargs):
         return
 
     utente = instance.utente
-
-    # Ottieni l'elenco dei nomi dei badge già ottenuti dall'utente per efficienza
+    enigma = instance.enigma # Ottieni l'enigma correlato
     earned_badges = set(UserBadge.objects.filter(utente=utente).values_list('badge__nome', flat=True))
 
-    # --- Logica per i Badge Semplici ---
-
-    # 1. Badge "Benvenuto Sfidante" (Primo enigma risolto)
-    # Controlliamo se questo è l'UNICO RispostaUtente corretta per questo utente
+    # --- Logica per Badge Semplici (Già implementata) ---
+    # 1. Benvenuto Sfidante
     if RispostaUtente.objects.filter(utente=utente, is_corretta=True).count() == 1:
         award_badge(utente, "Benvenuto Sfidante", earned_badges)
-
-    # 2. Badge "Mente Pura" (Risolto senza hint)
+    # 2. Mente Pura
     if instance.suggerimenti_usati == 0:
         award_badge(utente, "Mente Pura", earned_badges)
-
-    # 3. Badge "Fino in Fondo" (Risolto con 3 hint)
-    # Nota: MAX_HINTS_ALLOWED dovrebbe essere consistente con la logica altrove
+    # 3. Fino in Fondo
     MAX_HINTS_ALLOWED = 3
     if instance.suggerimenti_usati == MAX_HINTS_ALLOWED:
         award_badge(utente, "Fino in Fondo", earned_badges)
-
-    # 4. Badge "Collezionista" (Contatore enigmi risolti)
+    # 4. Collezionista
     total_correct_answers = RispostaUtente.objects.filter(utente=utente, is_corretta=True).count()
-
     if total_correct_answers >= 5:
         award_badge(utente, "Collezionista di Enigmi (Bronzo)", earned_badges)
     if total_correct_answers >= 15:
@@ -74,4 +66,30 @@ def check_and_award_badges(sender, instance, created, **kwargs):
     if total_correct_answers >= 30:
         award_badge(utente, "Collezionista di Enigmi (Oro)", earned_badges)
 
-    # --- Aggiungi qui la logica per altri badge semplici ---
+    # Recupera i tempi necessari se l'enigma esiste
+    if enigma and enigma.start_time and enigma.end_time and instance.data_inserimento:
+        start_time = enigma.start_time
+        end_time = enigma.end_time
+        submission_time = instance.data_inserimento
+        ONE_HOUR_IN_SECONDS = 3600
+
+        # 5. Badge "Lampo di Genio" (Risolto entro 1 ora dal rilascio)
+        # Assicurati che l'invio sia dopo l'inizio!
+        if submission_time >= start_time:
+            time_since_release_seconds = (submission_time - start_time).total_seconds()
+            if time_since_release_seconds <= ONE_HOUR_IN_SECONDS:
+                award_badge(utente, "Lampo di Genio", earned_badges)
+
+        # 6. Badge "Sul Filo di Lana" (Risolto nell'ultima ora)
+        # Assicurati che l'invio sia prima della fine!
+        if submission_time <= end_time:
+            time_before_deadline_seconds = (end_time - submission_time).total_seconds()
+            # Deve essere nell'ultima ora (<= 3600s) ma non esattamente 0 (o negativo)
+            if 0 < time_before_deadline_seconds <= ONE_HOUR_IN_SECONDS:
+                 award_badge(utente, "Sul Filo di Lana", earned_badges)
+
+    # 7. Badge "Punteggio Quasi Perfetto" (Punteggio >= 9.5 senza hint)
+    # Usiamo instance.punteggio che è già calcolato e salvato
+    if instance.punteggio >= 9.5 and instance.suggerimenti_usati == 0:
+        award_badge(utente, "Punteggio Quasi Perfetto", earned_badges)
+
