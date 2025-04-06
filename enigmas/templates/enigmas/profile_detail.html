@@ -26,15 +26,48 @@
                 </div>
             </div>
 
-             {# Sezione Badge (Placeholder) #}
-             <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    <h4 class="card-title fs-5"><i class="bi bi-award me-2"></i>Badge Ottenuti</h4>
-                    <p class="text-body-secondary"><em>Funzionalità Badge non ancora implementata.</em></p>
-                    {# Qui cicleremo sui badge quando li avremo #}
-                    {# {% for user_badge in badges %} ... {% endfor %} #}
-                </div>
-             </div>
+            {# Sezione Badge #}
+            <div class="card shadow-sm mb-4">
+               <div class="card-body">
+                   <h4 class="card-title fs-5"><i class="bi bi-award me-2"></i>Badge Ottenuti</h4>
+
+                   {# Verifica se l'utente ha badge #}
+                   {% if badges %}
+                       <div class="list-group list-group-flush"> {# Usiamo list-group per un elenco pulito #}
+                           {% for user_badge in badges %}
+                               <div class="list-group-item d-flex align-items-center bg-transparent px-0">
+                                   {# Icona basata sulla rarità (esempio) #}
+                                   <span class="me-3 fs-3">
+                                       {% if user_badge.badge.rarita == 'Oro' %}
+                                           <i class="bi bi-trophy-fill text-warning" title="Rarità: Oro"></i>
+                                       {% elif user_badge.badge.rarita == 'Argento' %}
+                                           <i class="bi bi-trophy-fill text-secondary" title="Rarità: Argento"></i>
+                                       {% elif user_badge.badge.rarita == 'Bronzo' %}
+                                           <i class="bi bi-trophy-fill" style="color:#cd7f32;" title="Rarità: Bronzo"></i>
+                                       {% else %} {# Comune #}
+                                            <i class="bi bi-patch-check-fill text-info" title="Rarità: Comune"></i>
+                                       {% endif %}
+                                   </span>
+                                   {# Dettagli Badge #}
+                                   <div class="flex-grow-1">
+                                       <h6 class="mb-0">{{ user_badge.badge.nome }}</h6>
+                                       <small class="text-body-secondary"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-placement="top"
+                                              title="{{ user_badge.badge.descrizione }}"> {# Tooltip con descrizione #}
+                                           Ottenuto il: {{ user_badge.data_ottenimento|date:"d M Y" }}
+                                       </small>
+                                   </div>
+                               </div>
+                           {% endfor %}
+                       </div>
+                   {% else %}
+                       {# Messaggio se l'utente non ha ancora badge #}
+                       <p class="text-body-secondary"><em>Nessun badge ottenuto finora. Continua a giocare!</em></p>
+                   {% endif %}
+               </div>
+            </div>
+            {# Fine Sezione Badge #}
         </div>
 
         <div class="col-md-4">

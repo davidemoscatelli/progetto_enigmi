@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages # Per mostrare messaggi all'utente
-from .models import Enigma, RispostaUtente, Suggerimento
+from .models import Enigma, RispostaUtente, Suggerimento, UserBadge
 from .forms import RispostaForm # Creeremo questo form tra poco
 from django.contrib.auth.models import User
 from django.http import JsonResponse, Http404, HttpResponseForbidden
@@ -259,21 +259,24 @@ def richiedi_suggerimento(request, enigma_id):
 def profile_view(request, username):
     """Mostra il profilo di un utente specifico."""
     profile_user = get_object_or_404(User, username=username)
-    # Recupera le risposte corrette per calcolare punteggio totale (come in classifica_view)
-    # Si potrebbe spostare questo calcolo in un metodo sul modello Profile o User
+
+    # Recupera punteggio totale (come prima)
     punteggio_totale_obj = RispostaUtente.objects.filter(
         utente=profile_user,
         is_corretta=True
     ).aggregate(punteggio_totale=Sum('punteggio'))
     punteggio_totale = punteggio_totale_obj['punteggio_totale'] or 0
 
-    # In futuro qui recupereremo anche i badge:
-    # badges_utente = profile_user.userbadge_set.all() # Assumendo UserBadge modello
+    # --- NUOVA QUERY: Recupera i badge ottenuti dall'utente ---
+    # Usiamo select_related('badge') per caricare anche i dati del Badge
+    # correlato in un'unica query più efficiente.
+    badges_utente = UserBadge.objects.filter(utente=profile_user).select_related('badge')
+    # ----------------------------------------------------------
 
     context = {
-        'profile_user': profile_user, # L'utente di cui stiamo vedendo il profilo
+        'profile_user': profile_user,
         'punteggio_totale': punteggio_totale,
-        # 'badges': badges_utente, # Da aggiungere dopo
+        'badges': badges_utente, # <-- Passiamo i badge al template
     }
     return render(request, 'enigmas/profile_detail.html', context)
 

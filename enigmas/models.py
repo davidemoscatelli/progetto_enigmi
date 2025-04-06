@@ -119,3 +119,40 @@ class Profile(models.Model):
     class Meta:
         verbose_name = "Profilo Utente"
         verbose_name_plural = "Profili Utenti"
+
+
+
+# NUOVO: Modello per descrivere un Badge/Achievement
+class Badge(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+    descrizione = models.TextField(help_text="Cosa bisogna fare per ottenere questo badge?")
+    # Potresti aggiungere un campo per l'icona (es. CharField per nome icona Bootstrap/FontAwesome o ImageField)
+    # icona_classe = models.CharField(max_length=50, blank=True, help_text="Es. 'bi bi-award-fill text-warning'")
+    # Oppure:
+    # icona_img = models.ImageField(upload_to='badge_icons/', null=True, blank=True)
+    rarita = models.CharField(max_length=20, choices=[('Comune', 'Comune'), ('Bronzo', 'Bronzo'), ('Argento', 'Argento'), ('Oro', 'Oro')], default='Bronzo') # Esempio di rarità
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        ordering = ['nome']
+        verbose_name = "Badge"
+        verbose_name_plural = "Badges"
+
+
+# NUOVO: Modello Many-to-Many per tracciare quali utenti hanno ottenuto quali badge
+class UserBadge(models.Model):
+    utente = models.ForeignKey(User, on_delete=models.CASCADE)
+    badge = models.ForeignKey(Badge, on_delete=models.CASCADE)
+    data_ottenimento = models.DateTimeField(auto_now_add=True) # Data in cui è stato ottenuto
+
+    def __str__(self):
+        return f"{self.utente.username} ha ottenuto '{self.badge.nome}'"
+
+    class Meta:
+        # Assicura che un utente possa ottenere ogni badge solo una volta
+        unique_together = ('utente', 'badge')
+        ordering = ['-data_ottenimento']
+        verbose_name = "Badge Utente"
+        verbose_name_plural = "Badges Utenti"
