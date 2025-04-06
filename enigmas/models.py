@@ -193,3 +193,17 @@ class Notifica(models.Model):
         ordering = ['-data_creazione'] # Mostra le più recenti prima
         verbose_name = "Notifica"
         verbose_name_plural = "Notifiche"
+
+class MessaggioEnigmista(models.Model):
+    titolo = models.CharField(max_length=150, blank=True, null=True, help_text="Titolo opzionale del messaggio")
+    testo = models.TextField(help_text="Il contenuto del messaggio (può contenere HTML di base se necessario)")
+    data_pubblicazione = models.DateTimeField(default=timezone.now, help_text="Data e ora in cui il messaggio diventa visibile")
+    pubblicato = models.BooleanField(default=True, db_index=True, help_text="Deseleziona per nascondere il messaggio senza cancellarlo")
+
+    def __str__(self):
+        return self.titolo if self.titolo else f"Messaggio del {self.data_pubblicazione.strftime('%d/%m/%Y %H:%M')}"
+
+    class Meta:
+        ordering = ['-data_pubblicazione'] # Mostra i più recenti prima nell'admin
+        verbose_name = "Messaggio dell'Enigmista"
+        verbose_name_plural = "Messaggi dell'Enigmista"

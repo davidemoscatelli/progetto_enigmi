@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.db.models import Sum
 from django.contrib import messages # Per mostrare messaggi all'utente
-from .models import Enigma, RispostaUtente, Suggerimento, UserBadge, Notifica
+from .models import Enigma, RispostaUtente, Suggerimento, UserBadge, Notifica, MessaggioEnigmista
 from .forms import RispostaForm # Creeremo questo form tra poco
 from django.contrib.auth.models import User
 from django.http import JsonResponse, Http404, HttpResponseForbidden
@@ -108,6 +108,10 @@ def enigma_view(request):
     else: # Se non c'è un enigma corrente valido
         form = None
 
+    ultimo_messaggio = MessaggioEnigmista.objects.filter(
+        pubblicato=True,
+        data_pubblicazione__lte=timezone.now() # Mostra solo quelli la cui data è passata
+    ).order_by('-data_pubblicazione').first() # Prendi solo il più recente
 
     # Contesto per il template
     context = {
@@ -128,6 +132,7 @@ def enigma_view(request):
         'suggerimenti_visti': suggerimenti_visti,
         'suggerimenti_usati_count': suggerimenti_usati_count,
         'max_suggerimenti': max_suggerimenti,
+        'ultimo_messaggio_enigmista': ultimo_messaggio,
     }
     return render(request, 'enigmas/enigma_detail.html', context)
 
@@ -307,3 +312,4 @@ def lista_notifiche(request):
         'notifiche': notifiche
     }
     return render(request, 'enigmas/lista_notifiche.html', context)
+

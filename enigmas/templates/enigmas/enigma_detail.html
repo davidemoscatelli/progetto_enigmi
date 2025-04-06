@@ -9,6 +9,19 @@
         <i class="bi bi-puzzle me-2"></i>Enigma Corrente
     </h2>
 
+    {% if ultimo_messaggio_enigmista %}
+    <div class="alert alert-info shadow-sm" role="alert"> {# Usa alert-info o altro stile #}
+        <h4 class="alert-heading fs-5">
+            <i class="bi bi-chat-quote-fill me-2"></i>
+            {{ ultimo_messaggio_enigmista.titolo|default:"Messaggio dall'Enigmista" }}
+        </h4>
+        <hr>
+        <p class="mb-0">{{ ultimo_messaggio_enigmista.testo|linebreaksbr }}</p>
+        <small class="text-muted d-block text-end">- Pubblicato {{ ultimo_messaggio_enigmista.data_pubblicazione|timesince }} fa</small>
+    </div>
+
+    {% endif %}
+
     {% if enigma %}
         {# Timer - Mostrato solo se la flag mostra_timer è True (calcolata nella view) #}
         {% if mostra_timer %} {# <<<--- CONDIZIONE CORRETTA E SEMPLIFICATA --- #}

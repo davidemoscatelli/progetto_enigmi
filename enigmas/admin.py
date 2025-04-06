@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
 # Importa TUTTI i modelli che vuoi gestire nell'admin
-from .models import Enigma, RispostaUtente, Suggerimento, Profile, Badge, UserBadge, Notifica # <-- Importato anche Notifica
+from .models import Enigma, RispostaUtente, Suggerimento, Profile, Badge, UserBadge, Notifica, MessaggioEnigmista# <-- Importato anche Notifica
 
 # --- INLINES (Definizioni per mostrarli dentro altri modelli) ---
 
@@ -105,3 +105,18 @@ class NotificaAdmin(admin.ModelAdmin):
             return format_html('<a href="{}" target="_blank">Apri Link</a>', obj.link)
         return "-" # Mostra un trattino se non c'è link
 # --- FINE REGISTRAZIONE NOTIFICA ---
+
+# NUOVA REGISTRAZIONE MESSAGGIO ENIGMISTA
+@admin.register(MessaggioEnigmista)
+class MessaggioEnigmistaAdmin(admin.ModelAdmin):
+    list_display = ('titolo', 'data_pubblicazione', 'pubblicato', 'testo_troncato')
+    list_filter = ('pubblicato', 'data_pubblicazione')
+    search_fields = ('titolo', 'testo')
+    list_editable = ('pubblicato',) # Permette di cambiare lo stato dalla lista
+
+    @admin.display(description='Testo (Troncato)')
+    def testo_troncato(self, obj):
+        limit = 100
+        if obj.testo:
+            return obj.testo[:limit] + '...' if len(obj.testo) > limit else obj.testo
+        return ""
