@@ -359,6 +359,6 @@ footer {
     font-family: "Rubik Glitch", system-ui; /* <-- NUOVO FONT APPLICATO */
     color: #ffffff !important;
     font-weight: 400; /* Rubik Glitch ha solo questo peso */
-    font-size: 2rem; /* Aggiustato leggermente per il nuovo font */
+    font-size: 1.6rem; /* Aggiustato leggermente per il nuovo font */
 
 }
