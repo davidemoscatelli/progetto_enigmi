@@ -71,7 +71,7 @@ main {
 }
 
 h2, h3 {
-    color: #ffffff; /* Rosso scuro per i titoli di sezione */
+    color: #FFC109; /* Rosso scuro per i titoli di sezione */
     border-bottom: 1px solid #555;
     padding-bottom: 0.5rem;
     margin-bottom: 1.5rem;
@@ -101,7 +101,7 @@ h2, h3 {
 #countdown-timer {
     font-size: 2.5rem;
     font-weight: bold;
-    color: #ffffff; /* Giallo/Oro per il timer */
+    color: #33ff00; /* Giallo/Oro per il timer */
     background-color: #111;
     padding: 10px 20px;
     border-radius: 5px;
@@ -353,4 +353,12 @@ footer {
 .logout-button.magnetic-btn:hover::before {
      opacity: 0.2; /* Effetto più leggero per bottone trasparente */
      background: radial-gradient(circle closest-side, var(--text-primary), transparent);
+}
+
+.navbar-brand-custom {
+    font-family: "Rubik Glitch", system-ui; /* <-- NUOVO FONT APPLICATO */
+    color: #ffffff !important;
+    font-weight: 400; /* Rubik Glitch ha solo questo peso */
+    font-size: 1.6rem; /* Aggiustato leggermente per il nuovo font */
+
 }
