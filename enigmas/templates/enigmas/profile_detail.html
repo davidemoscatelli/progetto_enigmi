@@ -1,0 +1,54 @@
+{% extends 'enigmas/base.html' %}
+{% load static %}
+
+{% block title %}Profilo di {{ profile_user.username }}{% endblock %}
+
+{% block content %}
+    <h2 class="border-bottom pb-2 mb-4 display-6">
+        <i class="bi bi-person-circle me-2"></i>Profilo di {{ profile_user.username }}
+    </h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            {# Informazioni Base #}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title fs-5">Informazioni</h4>
+                    <p><strong>Username:</strong> {{ profile_user.username }}</p>
+                    <p><strong>Iscritto dal:</strong> {{ profile_user.date_joined|date:"d M Y" }}</p>
+                    {% if profile_user.profile.bio %}
+                        <p><strong>Bio:</strong> {{ profile_user.profile.bio|linebreaksbr }}</p>
+                    {% endif %}
+                    {# Link per modificare il profilo se è l'utente loggato #}
+                    {% if profile_user == user %}
+                        <a href="#" class="btn btn-sm btn-outline-secondary disabled">Modifica Profilo (Non ancora implementato)</a>
+                    {% endif %}
+                </div>
+            </div>
+
+             {# Sezione Badge (Placeholder) #}
+             <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h4 class="card-title fs-5"><i class="bi bi-award me-2"></i>Badge Ottenuti</h4>
+                    <p class="text-body-secondary"><em>Funzionalità Badge non ancora implementata.</em></p>
+                    {# Qui cicleremo sui badge quando li avremo #}
+                    {# {% for user_badge in badges %} ... {% endfor %} #}
+                </div>
+             </div>
+        </div>
+
+        <div class="col-md-4">
+            {# Statistiche (Esempio) #}
+             <div class="card shadow-sm mb-4">
+                <div class="card-body text-center">
+                    <h4 class="card-title fs-5">Punteggio Totale</h4>
+                    <p class="display-4 fw-bold">{{ punteggio_totale|floatformat:2 }}</p>
+                     {# Potresti aggiungere altre statistiche qui #}
+                     {# Es: Posizione in classifica, Enigmi Risolti #}
+                </div>
+             </div>
+             {# Potresti aggiungere altre card qui #}
+        </div>
+    </div>
+
+{% endblock %}

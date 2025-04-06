@@ -255,3 +255,30 @@ def richiedi_suggerimento(request, enigma_id):
         'testo_suggerimento': prossimo_suggerimento.testo,
         'suggerimenti_usati_ora': risposta_utente.suggerimenti_usati
     })
+
+def profile_view(request, username):
+    """Mostra il profilo di un utente specifico."""
+    profile_user = get_object_or_404(User, username=username)
+    # Recupera le risposte corrette per calcolare punteggio totale (come in classifica_view)
+    # Si potrebbe spostare questo calcolo in un metodo sul modello Profile o User
+    punteggio_totale_obj = RispostaUtente.objects.filter(
+        utente=profile_user,
+        is_corretta=True
+    ).aggregate(punteggio_totale=Sum('punteggio'))
+    punteggio_totale = punteggio_totale_obj['punteggio_totale'] or 0
+
+    # In futuro qui recupereremo anche i badge:
+    # badges_utente = profile_user.userbadge_set.all() # Assumendo UserBadge modello
+
+    context = {
+        'profile_user': profile_user, # L'utente di cui stiamo vedendo il profilo
+        'punteggio_totale': punteggio_totale,
+        # 'badges': badges_utente, # Da aggiungere dopo
+    }
+    return render(request, 'enigmas/profile_detail.html', context)
+
+@login_required
+def my_profile_view(request):
+    """Reindirizza alla pagina del profilo dell'utente loggato."""
+    # Questo evita di dover passare l'username nell'URL per il proprio profilo
+    return redirect('profile_view', username=request.user.username)

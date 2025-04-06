@@ -31,7 +31,7 @@ nav {
 nav a {
     color: #b0bec5; /* Grigio-azzurro chiaro per i link */
     text-decoration: none;
-    margin: 0 1rem;
+    /*margin: 0 1rem;*/
     transition: color 0.3s ease;
 }
 
@@ -41,7 +41,7 @@ nav a:hover, nav a:focus {
 
 nav span {
     color: #cfd8dc; /* Grigio più chiaro per il benvenuto */
-    margin-right: 1rem;
+    /*margin-right: 1rem;*/
 }
 
 .logout-button {

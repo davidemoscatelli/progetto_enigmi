@@ -14,6 +14,8 @@ urlpatterns = [
     # Usiamo la vista built-in per il logout
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'), # Reindirizza al login dopo logout
 
+    path('profilo/<str:username>/', views.profile_view, name='profile_view'),
+    path('profilo/', views.my_profile_view, name='my_profile'), # URL per il proprio profilo
     # Aggiungere qui altri URL se necessari (es. registrazione, password reset)
     # path('register/', views.register_view, name='register'),
     # path('password_reset/', auth_views.PasswordResetView.as_view(), name='password_reset'),

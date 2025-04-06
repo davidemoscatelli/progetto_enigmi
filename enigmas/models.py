@@ -104,3 +104,18 @@ class Suggerimento(models.Model):
         unique_together = ('enigma', 'ordine')
         verbose_name = "Suggerimento"
         verbose_name_plural = "Suggerimenti"
+
+class Profile(models.Model):
+    # Collegamento uno-a-uno al modello User standard di Django
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    # Campi aggiuntivi del profilo
+    bio = models.TextField(max_length=500, blank=True, help_text="Una breve biografia (opzionale)")
+    # Campo per gestire preferenza notifiche (per il punto 3a futuro)
+    riceve_notifiche = models.BooleanField(default=True, help_text="L'utente desidera ricevere notifiche in-app?")
+
+    def __str__(self):
+        return f"Profilo di {self.user.username}"
+
+    class Meta:
+        verbose_name = "Profilo Utente"
+        verbose_name_plural = "Profili Utenti"

@@ -1,4 +1,5 @@
 {% extends 'enigmas/base.html' %}
+{% load static %} {# Rimosso commento, load static è utile #}
 
 {% block title %}Classifica Generale{% endblock %}
 
@@ -13,7 +14,7 @@
             <table class="table table-dark table-striped table-hover mb-0 align-middle"> {# Aggiunto mb-0 se dentro wrapper #}
                 <thead class="table-light"> {# Header più chiaro per contrasto #}
                     <tr>
-                        <th scope="col" class="text-center">Posizione</th>
+                        <th scope="col" class="text-center" style="width: 10%;">Posizione</th> {# Larghezza indicativa #}
                         <th scope="col">Utente</th>
                         <th scope="col" class="text-end">Punteggio Totale</th> {# Allineato a destra #}
                     </tr>
@@ -21,25 +22,33 @@
                 <tbody>
                     {% for entry in classifica %}
                     <tr>
-                        <td class="text-center fw-bold">
-                            {# Aggiungi icone per le prime posizioni? #}
+                        <td class="text-center fw-bold fs-5"> {# Posizione più grande #}
+                            {# Aggiungi icone per le prime posizioni #}
                             {% if forloop.counter == 1 %}
-                                <i class="bi bi-award-fill text-warning"></i> {% elif forloop.counter == 2 %}
-                                <i class="bi bi-award-fill text-secondary"></i> {% elif forloop.counter == 3 %}
-                                <i class="bi bi-award-fill" style="color:#cd7f32;"></i> {% else %}
-                                {{ forloop.counter }}
+                                <i class="bi bi-award-fill text-warning" title="Primo Posto"></i>
+                            {% elif forloop.counter == 2 %}
+                                <i class="bi bi-award-fill text-secondary" title="Secondo Posto"></i>
+                            {% elif forloop.counter == 3 %}
+                                <i class="bi bi-award-fill" style="color:#cd7f32;" title="Terzo Posto"></i>
+                            {% else %}
+                                {{ forloop.counter }}° {# Aggiunto ° #}
                             {% endif %}
                         </td>
-                        <td><i class="bi bi-person-fill me-2 text-secondary"></i>{{ entry.utente__username }}</td>
-                        <td class="text-end fs-5">{{ entry.punteggio_totale|floatformat:2 }}</td> {# Punteggio più grande #}
+                        <td>
+                             <i class="bi bi-person-fill me-2 text-secondary"></i>
+                             {# --- MODIFICA: Reso il nome utente un link al profilo --- #}
+                             <a href="{% url 'profile_view' username=entry.utente__username %}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ entry.utente__username }}</a>
+                             {# --- FINE MODIFICA --- #}
+                        </td>
+                        <td class="text-end fs-5 fw-medium">{{ entry.punteggio_totale|floatformat:2 }}</td> {# Punteggio più grande e leggermente bold #}
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     {% else %}
-        <div class="alert alert-secondary" role="alert">
-          <i class="bi bi-info-circle-fill me-2"></i>Nessun punteggio registrato al momento. Risolvi qualche enigma!
+        <div class="alert alert-secondary text-center" role="alert"> {# Aggiunto text-center #}
+            <i class="bi bi-info-circle-fill me-2"></i>Nessun punteggio registrato al momento. Risolvi l'enigma attivo per entrare in classifica!
         </div>
     {% endif %}
 {% endblock %}

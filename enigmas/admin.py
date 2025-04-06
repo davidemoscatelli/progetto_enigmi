@@ -1,7 +1,9 @@
 # enigmas/admin.py
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 # Importa TUTTI i modelli necessari
-from .models import Enigma, RispostaUtente, Suggerimento
+from .models import Enigma, RispostaUtente, Suggerimento, Profile
 
 # Definisci l'inline per i suggerimenti da mostrare nell'admin dell'Enigma
 class SuggerimentoInline(admin.TabularInline): # O admin.StackedInline per un layout diverso
@@ -37,9 +39,25 @@ class RispostaUtenteAdmin(admin.ModelAdmin):
     # Aggiungi 'suggerimenti_usati' e 'data_inserimento' ai readonly
     readonly_fields = ('punteggio', 'is_corretta', 'data_inserimento', 'suggerimenti_usati')
 
-# Non è strettamente necessario registrare SuggerimentoAdmin separatamente
-# se usi l'inline, ma puoi farlo se vuoi una vista dedicata solo ai suggerimenti.
-# @admin.register(Suggerimento)
-# class SuggerimentoAdmin(admin.ModelAdmin):
-#     list_display = ('enigma', 'ordine', 'testo')
-#     list_filter = ('enigma',)
+
+class ProfileInline(admin.StackedInline): # Stacked occupa più spazio di Tabular
+    model = Profile
+    can_delete = False # Non vogliamo cancellare il profilo quando cancelliamo l'utente? O sì?
+    verbose_name_plural = 'Profilo'
+    fk_name = 'user'
+
+# Ridefinisci l'Admin per il modello User standard
+class UserAdmin(BaseUserAdmin):
+    inlines = (ProfileInline,) # Aggiungi l'inline del profilo
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'get_profile_info') # Aggiunto metodo custom
+    list_select_related = ('profile',) # Ottimizza il recupero del profilo
+
+    @admin.display(description='Bio (Profilo)') # Nome colonna custom
+    def get_profile_info(self, instance):
+         # Potremmo mostrare la bio o altro dal profilo qui nella lista
+        return instance.profile.bio[:50] + '...' if instance.profile.bio else '-'
+    # get_profile_info.short_description = 'Bio (Profilo)' # Alternativa per nome colonna
+
+# De-registra l'admin User di default e registra il nostro custom
+admin.site.unregister(User)
+admin.site.register(User, UserAdmin)
