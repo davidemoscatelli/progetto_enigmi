@@ -18,20 +18,40 @@ def crea_o_aggiorna_profilo_utente(sender, instance, created, **kwargs):
 # Funzione helper per assegnare un badge solo se l'utente non ce l'ha già
 def award_badge(user, badge_name, user_earned_badges_set):
     """
-    Assegna un badge a un utente se non lo possiede già.
+    Assegna un badge a un utente se non lo possiede già E CREA UNA NOTIFICA.
     'user_earned_badges_set' è un set con i nomi dei badge già ottenuti.
     """
     if badge_name not in user_earned_badges_set:
         try:
             badge = Badge.objects.get(nome=badge_name)
+            # 1. Crea il record UserBadge (come prima)
             UserBadge.objects.create(utente=user, badge=badge)
-            print(f"INFO: Badge '{badge_name}' assegnato a {user.username}") # Log per debug
+            print(f"INFO: Badge '{badge_name}' assegnato a {user.username}")
             user_earned_badges_set.add(badge_name) # Aggiorna il set locale
+
+            # --- 2. NUOVO: Crea la notifica in-app ---
+            try:
+                messaggio_notifica = f"Congratulazioni! Hai ottenuto il badge: '{badge.nome}'!"
+                # Crea un link al profilo dell'utente dove può vedere il badge
+                link_profilo = reverse('profile_view', kwargs={'username': user.username})
+                # Crea l'oggetto Notifica
+                Notifica.objects.create(
+                    utente=user,
+                    messaggio=messaggio_notifica,
+                    tipo_notifica=Notifica.TIPO_BADGE_OTTENUTO, # Usa il tipo corretto
+                    link=link_profilo
+                )
+                print(f"INFO: Notifica per badge '{badge_name}' creata per {user.username}")
+            except Exception as e_notify:
+                # Logga errore creazione notifica, ma non bloccare l'assegnazione del badge
+                print(f"ERRORE durante creazione notifica badge '{badge_name}' per {user.username}: {e_notify}")
+            # --- FINE PARTE NUOVA ---
+
         except Badge.DoesNotExist:
             print(f"ATTENZIONE: Badge '{badge_name}' non trovato nel database!")
-        except Exception as e:
-            # Logga altri errori imprevisti durante la creazione di UserBadge
-            print(f"ERRORE durante assegnazione badge '{badge_name}' a {user.username}: {e}")
+        except Exception as e_create_userbadge:
+            # Logga altri errori imprevisti
+            print(f"ERRORE durante assegnazione badge '{badge_name}' a {user.username}: {e_create_userbadge}")
 
 @receiver(post_save, sender=RispostaUtente)
 def check_and_award_badges(sender, instance, created, **kwargs):
