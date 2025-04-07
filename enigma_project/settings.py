@@ -252,7 +252,7 @@ else:
     EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True' # True per porta 587
     EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True' # True solo se usi porta 465 (raro)
     DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') # Il tuo indirizzo mittente verificato su SendGrid
-
+    
     
     if not all([EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL]):
         print("ATTENZIONE: Variabili d'ambiente EMAIL_* non completamente configurate per SMTP in produzione!")

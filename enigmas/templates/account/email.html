@@ -1,0 +1,82 @@
+{# templates/account/email.html #}
+{% extends "enigmas/base.html" %} {# Estende il tuo base template #}
+{% load i18n %}
+{% load account %} {# Tag specifici di allauth #}
+
+{% block title %}{% trans "Gestione Indirizzi Email" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body p-4">
+                <h1 class="card-title text-center h3 mb-4">{% trans "Gestisci Indirizzi Email" %}</h1>
+
+                {% if user.emailaddress_set.all %} {# Controlla se ci sono email associate #}
+                    <p>{% trans 'I seguenti indirizzi email sono associati al tuo account:' %}</p>
+
+                    {# Form per gestire le email esistenti #}
+                    <form action="{% url 'account_email' %}" class="email_list" method="post">
+                        {% csrf_token %}
+                        <fieldset class="blockLabels">
+                            <div class="list-group mb-3">
+                            {% for emailaddress in user.emailaddress_set.all %}
+                                {# Riga per ogni email con radio button per selezionarla #}
+                                <label for="email_{{ emailaddress.id }}" class="list-group-item list-group-item-action {% if emailaddress.primary %}active{% endif %}">
+                                    <div class="form-check">
+                                         <input id="email_{{ emailaddress.id }}" type="radio" name="email" class="form-check-input" {% if emailaddress.primary %}checked="checked"{% endif %} value="{{ emailaddress.email }}"/>
+                                         <span class="form-check-label">
+                                             {{ emailaddress.email }}
+                                             {# Badge per stato verificato/non verificato #}
+                                             {% if emailaddress.verified %}
+                                                 <span class="badge bg-success rounded-pill ms-1">{% trans "Verificato" %}</span>
+                                             {% else %}
+                                                <span class="badge bg-warning rounded-pill ms-1">{% trans "Non Verificato" %}</span>
+                                             {% endif %}
+                                             {# Badge per email primaria #}
+                                             {% if emailaddress.primary %}
+                                                <span class="badge bg-info rounded-pill ms-1">{% trans "Primario" %}</span>
+                                             {% endif %}
+                                         </span>
+                                    </div>
+                                </label>
+                            {% endfor %}
+                            </div>
+
+                            {# Pulsanti per le azioni sull'email selezionata #}
+                            <div class="btn-group d-flex" role="group">
+                                {# Allauth usa l'attributo 'name' per distinguere le azioni #}
+                                <button class="btn btn-secondary" type="submit" name="action_primary">{% trans 'Rendi Primario' %}</button>
+                                <button class="btn btn-secondary" type="submit" name="action_send">{% trans 'Reinvia Verifica' %}</button>
+                                <button class="btn btn-danger" type="submit" name="action_remove">{% trans 'Rimuovi Selezionato' %}</button>
+                            </div>
+                        </fieldset>
+                    </form>
+
+                {% else %}
+                    {# Messaggio se non ci sono email associate #}
+                    <p>{% trans 'Nessun indirizzo email associato al tuo account.' %}</p>
+                {% endif %}
+
+                {# Mostra il form per aggiungere una nuova email (se permesso) #}
+                {% if can_add_email %} {# Variabile passata da allauth #}
+                    <hr class="my-4">
+                    <h4 class="h5">{% trans "Aggiungi Indirizzo Email" %}</h4>
+                    {# Il form per aggiungere è passato come 'form' dalla view EmailView #}
+                    <form method="post" action="{% url 'account_email' %}" class="add_email">
+                        {% csrf_token %}
+                        {{ form.as_p }} {# Rendering semplice del form #}
+                        <button name="action_add" type="submit" class="btn btn-primary w-100 mt-2">{% trans "Aggiungi Email" %}</button>
+                    </form>
+                {% endif %}
+
+            </div> {# Fine card-body #}
+        </div> {# Fine card #}
+
+        <div class="text-center mt-3">
+            <a href="{% url 'my_profile' %}" class="text-decoration-none">Torna al profilo</a>
+        </div>
+
+    </div> {# Fine Col #}
+</div> {# Fine Row #}
+{% endblock %}
