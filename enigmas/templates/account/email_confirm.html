@@ -1,0 +1,33 @@
+{# templates/account/email_confirm.html #}
+{% extends "enigmas/base.html" %}
+{% load i18n %}
+{% load account %}
+
+{% block title %}{% trans "Conferma Indirizzo Email" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="card-title text-center h3 mb-4">{% trans "Conferma Indirizzo Email" %}</h1>
+
+                {% if confirmation %}
+                    <p class="text-center">{% blocktrans with confirmation.email_address.email as email %}Per favore, conferma che <a href="mailto:{{ email }}">{{ email }}</a> è il tuo indirizzo email cliccando sul pulsante qui sotto.{% endblocktrans %}</p>
+                    <form method="post" action="{% url 'account_confirm_email' confirmation.key %}">
+                        {% csrf_token %}
+                        <div class="d-grid"> {# Rende il bottone a tutta larghezza #}
+                            <button type="submit" class="btn btn-primary">{% trans 'Conferma' %}</button>
+                        </div>
+                    </form>
+                {% else %}
+                    {% url 'account_email' as email_url %}
+                    <div class="alert alert-warning text-center" role="alert">
+                       {% blocktrans %}Il link di conferma email è scaduto o non è valido. Per favore, <a href="{{ email_url }}">richiedi una nuova email di conferma</a>.{% endblocktrans %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% load account %}{% autoescape off %}
+Ciao {{ user.username }},
+
+Benvenuto nell'arena dell'Enigmista su Illusion Game!
+
+Per completare la tua registrazione e attivare il tuo account, per favore clicca sul link sottostante:
+{{ activate_url }}
+
+Se non ti sei registrato tu, ignora semplicemente questa email.
+
+Ci vediamo nel gioco... se ne avrai il coraggio.
+
+- L'Enigmista
+{% endautoescape %}
