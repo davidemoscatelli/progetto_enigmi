@@ -237,6 +237,33 @@ if not CSRF_TRUSTED_ORIGINS and not DEBUG:
      print("ATTENZIONE: CSRF_TRUSTED_ORIGINS è vuota in modalità non-DEBUG!")
      # raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS non può essere vuota in produzione")
 
+if DEBUG:
+    # SVILUPPO LOCALE: Stampa le email sulla console
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'debug@example.com' # Mittente fittizio per console
+    print("INFO: Usando Console Email Backend (DEBUG=True)")
+else:
+    # PRODUZIONE (Render): Usa SMTP e leggi da variabili d'ambiente
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST') # Es. smtp.sendgrid.net
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587)) # Es. 587 per TLS
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER') # Es. 'apikey' per SendGrid
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD') # La tua API Key SendGrid
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True' # True per porta 587
+    EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False') == 'True' # True solo se usi porta 465 (raro)
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') # Il tuo indirizzo mittente verificato su SendGrid
+
+    
+    if not all([EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL]):
+        print("ATTENZIONE: Variabili d'ambiente EMAIL_* non completamente configurate per SMTP in produzione!")
+        # Considera di sollevare un errore per bloccare l'avvio se mancano:
+        # from django.core.exceptions import ImproperlyConfigured
+        # raise ImproperlyConfigured("Variabili SMTP non impostate in produzione!")
+    else:
+         print(f"INFO: Usando SMTP Email Backend ({EMAIL_HOST}:{EMAIL_PORT})")
+
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Impostazioni specifiche django-allauth
 ACCOUNT_EMAIL_REQUIRED = True          # Rende l'email obbligatoria alla registrazione
