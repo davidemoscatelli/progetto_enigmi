@@ -1,0 +1,33 @@
+{# templates/account/signup.html #}
+{% extends "enigmas/base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Registrati" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+         <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="card-title text-center h3 mb-4">{% trans "Registrati a Illusion Game" %}</h1>
+
+                {% url 'account_login' as login_url %}
+                <p class="text-center text-body-secondary mb-4">
+                    {% blocktrans %}Hai già un account? Allora fai il <a href="{{ login_url }}">login</a>.{% endblocktrans %}
+                </p>
+
+                <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
+                    {% csrf_token %}
+
+                    {{ form.as_p }} {# Renderizza i campi (Username, Email, Password, Conferma Password) #}
+
+                    {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% endif %}
+                    <button type="submit" class="btn btn-success w-100 mt-3">{% trans "Registrati" %}</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

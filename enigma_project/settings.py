@@ -76,13 +76,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'enigmas',
-    # Aggiungi qui altre tue app o app di terze parti come:
-    # 'crispy_forms',
-    # 'allauth',
-    # 'allauth.account',
-    # 'corsheaders',
-    # 'rest_framework',
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
 ]
+
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -94,8 +93,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # Aggiungi 'allauth' middleware se lo usi
-    # "allauth.account.middleware.AccountMiddleware",
+    'allauth.account.middleware.AccountMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, e.g. login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
 ]
 
 ROOT_URLCONF = 'enigma_project.urls'
@@ -232,15 +238,17 @@ if not CSRF_TRUSTED_ORIGINS and not DEBUG:
      # raise ImproperlyConfigured("CSRF_TRUSTED_ORIGINS non può essere vuota in produzione")
 
 
-# Esempio: Configurazione Email (se invii email, da configurare con provider esterno)
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = os.environ.get('EMAIL_HOST')
-# EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-# EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-# DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+# Impostazioni specifiche django-allauth
+ACCOUNT_EMAIL_REQUIRED = True          # Rende l'email obbligatoria alla registrazione
+ACCOUNT_USERNAME_REQUIRED = True       # Rende l'username obbligatorio (potresti impostarlo a False se vuoi login solo con email)
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email' # Permette login sia con username che con email
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory' # ('mandatory' richiede verifica email per login, 'optional' la chiede ma permette login, 'none' la disabilita)
+ACCOUNT_LOGOUT_ON_GET = True          # Permette il logout anche con richiesta GET (più semplice)
+ACCOUNT_LOGIN_ON_PASSWORD_RESET = True # Fa login automatico dopo reset password
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Illusion Game] ' # Prefisso per le email inviate da allauth
 
-
-# Impostazioni specifiche per le tue app (es. allauth, crispyforms...)
-# ...
+# URL a cui reindirizzare DOPO login/logout/etc (allauth li usa)
+# Assicurati che questi 'name' esistano nei tuoi urls.py!
+LOGIN_REDIRECT_URL = '/' # O 'dashboard' se l'avessi implementata
+ACCOUNT_LOGOUT_REDIRECT_URL = '/' # Dove mandare dopo il logout
+# Altri URL di allauth (signup, email verification, etc.) sono gestiti da allauth stesso

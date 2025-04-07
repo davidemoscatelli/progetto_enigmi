@@ -1,0 +1,56 @@
+{# templates/account/login.html #}
+{% extends "enigmas/base.html" %}
+{% load i18n %}
+{% load account %} {# Tag specifici di allauth #}
+
+{% block title %}{% trans "Accedi" %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h1 class="card-title text-center h3 mb-4">{% trans "Accedi a Illusion Game" %}</h1>
+
+                {% url 'account_signup' as signup_url %}
+                {% if signup_url %}
+                <p class="text-center text-body-secondary mb-4">
+                    {% blocktrans %}Non hai un account? <a href="{{ signup_url }}">Registrati</a>.{% endblocktrans %}
+                </p>
+                {% endif %}
+
+                {% if form.errors and not form.non_field_errors %}
+                 <div class="alert alert-danger" role="alert">
+                    {% trans "Username o password errati." %} {# Messaggio generico per sicurezza #}
+                 </div>
+                {% endif %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}
+                       <p class="mb-0">{{ error }}</p>
+                    {% endfor %}
+                 </div>
+                {% endif %}
+
+
+                <form class="login" method="POST" action="{% url 'account_login' %}">
+                    {% csrf_token %}
+
+                    {{ form.as_p }} {# Renderizza i campi del form (Username/Email, Password, Remember Me) #}
+
+                    {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% endif %}
+
+                    <div class="text-end mb-3">
+                        <a class="small text-decoration-none" href="{% url 'account_reset_password' %}">{% trans "Password dimenticata?" %}</a>
+                    </div>
+
+                    <button class="btn btn-primary w-100" type="submit">{% trans "Accedi" %}</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

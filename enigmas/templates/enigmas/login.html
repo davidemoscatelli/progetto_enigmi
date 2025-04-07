@@ -53,8 +53,11 @@
 
         {# Link per azioni aggiuntive #}
         <div class="text-center mt-4">
-         {#<p><a href="{% url 'password_reset' %}" class="text-body-secondary">Password dimenticata?</a></p> #}
-          {#<p>Non hai un account? <a href="{% url 'register' %}" class="link-danger">Registrati qui</a></p> #}
+          <p><a href="{% url 'account_reset_password' %}">Password dimenticata?</a></p>
+          <p class="text-body-secondary">Non hai ancora un account?
+            <a href="{% url 'account_signup' %}" ...>Registrati ora!</a>
+          </p>
+
         </div>
 
       </div> {# fine card-body #}

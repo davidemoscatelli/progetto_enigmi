@@ -21,7 +21,9 @@
                     {% endif %}
                     {# Link per modificare il profilo se è l'utente loggato #}
                     {% if profile_user == user %}
-                        <a href="#" class="btn btn-sm btn-outline-secondary disabled">Modifica Profilo (Non ancora implementato)</a>
+                        <a href="{% url 'password_change' %}" class="btn btn-sm btn-outline-warning"> {# <-- Nome URL cambiato #}
+                            <i class="bi bi-key-fill me-1"></i> Cambia Password
+                        </a>
                     {% endif %}
                 </div>
             </div>
