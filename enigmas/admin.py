@@ -51,7 +51,7 @@ class RispostaUtenteAdmin(admin.ModelAdmin):
     list_display = ('utente', 'enigma', 'data_inserimento', 'is_corretta', 'punteggio', 'suggerimenti_usati')
     list_filter = ('is_corretta', 'enigma__is_active', 'enigma', 'utente')
     search_fields = ('utente__username', 'enigma__titolo', 'risposta_inserita')
-    readonly_fields = ('punteggio', 'is_corretta', 'data_inserimento', 'suggerimenti_usati')
+    readonly_fields = ('punteggio', 'is_corretta', 'suggerimenti_usati')
     autocomplete_fields = ['utente', 'enigma'] # Rende più facile selezionare
 
 # Rimuoviamo la vecchia registrazione di User/UserAdmin se presente
