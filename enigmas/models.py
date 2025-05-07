@@ -60,19 +60,44 @@ class RispostaUtente(models.Model):
         return punteggio_base
 
     def save(self, *args, **kwargs):
-        # Controlla se la risposta è corretta
-        self.is_corretta = self.risposta_inserita.strip().lower() == self.enigma.risposta_corretta.strip().lower()
+        # Determina lo stato di correttezza *prima* di salvare, basandosi sull'input attuale
+        risposta_attuale_corretta = self.risposta_inserita.strip().lower() == self.enigma.risposta_corretta.strip().lower()
 
-        # Calcola e applica il punteggio se la risposta è corretta
-        if self.is_corretta:
-            punteggio_base = self.calcola_punteggio_base()
-            # Ora self.suggerimenti_usati esiste!
+        # Controlla se l'oggetto esiste già e qual era il suo stato precedente
+        is_newly_correct = False
+        old_is_corretta = False
+        if self.pk is not None: # Se è un update
+            try:
+                # Recupera lo stato salvato nel database
+                old_instance = RispostaUtente.objects.get(pk=self.pk)
+                old_is_corretta = old_instance.is_corretta
+            except RispostaUtente.DoesNotExist:
+                 old_is_corretta = False # Se non esiste, considerala non corretta prima
+        # Altrimenti (se self.pk is None), old_is_corretta rimane False (default)
+
+        # Determina se la risposta è diventata corretta *proprio ora*
+        if not old_is_corretta and risposta_attuale_corretta:
+            is_newly_correct = True
+
+        # Aggiorna lo stato di correttezza dell'oggetto Python
+        self.is_corretta = risposta_attuale_corretta
+
+        # Aggiorna timestamp e calcola punteggio SOLO QUANDO diventa corretta
+        if is_newly_correct:
+            # Imposta il timestamp al momento della risposta corretta!
+            self.data_inserimento = timezone.now()
+            # Calcola il punteggio usando il nuovo timestamp
+            punteggio_base = self.calcola_punteggio_base() # Ora usa la data_inserimento aggiornata
             penalita_percentuale = self.suggerimenti_usati * 0.10
             punteggio_finale = punteggio_base * (1.0 - penalita_percentuale)
             self.punteggio = max(0.0, round(punteggio_finale, 2))
-        else:
+        elif not self.is_corretta:
+            # Se è (o torna ad essere) errata, azzera il punteggio
             self.punteggio = 0.0
+        # Se era già corretta in precedenza (old_is_corretta=True), non facciamo nulla
+        # per non cambiare il punteggio/timestamp originali.
 
+        # Salva l'oggetto nel database
         super().save(*args, **kwargs)
 
     def __str__(self):
