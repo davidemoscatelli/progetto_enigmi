@@ -4,14 +4,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView as BaseLoginView
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.db.models import Sum
+from django.db.models import Sum, Q, Value, FloatField, F
 from django.contrib import messages # Per mostrare messaggi all'utente
 from .models import Enigma, RispostaUtente, Suggerimento, UserBadge, Notifica, MessaggioEnigmista
 from .forms import RispostaForm # Creeremo questo form tra poco
 from django.contrib.auth.models import User
 from django.http import JsonResponse, Http404, HttpResponseForbidden
 from django.views.decorators.http import require_POST
-
+from django.db.models.functions import Coalesce
 
 @login_required
 def enigma_view(request):
@@ -185,14 +185,33 @@ def richiedi_suggerimento(request, enigma_id):
 
 @login_required
 def classifica_view(request):
-    # Raggruppa le risposte corrette per utente e somma i punteggi
-    classifica_data = RispostaUtente.objects.filter(is_corretta=True)\
-        .values('utente__username')\
-        .annotate(punteggio_totale=Sum('punteggio'))\
-        .order_by('-punteggio_totale') # Ordina per punteggio decrescente
+    # Partiamo dagli Utenti e annotiamo i loro punteggi
+    utenti_con_punteggio = User.objects.filter(
+        is_active=True
+        # is_staff=False, # Decommenta per escludere lo staff
+        # is_superuser=False # Decommenta per escludere i superuser
+    ).annotate(
+        punti_da_risposte=Coalesce(
+            Sum('rispostautente__punteggio', filter=Q(rispostautente__is_corretta=True)),
+            Value(0.0),
+            output_field=FloatField()
+        ),
+        punti_bonus_profilo=Coalesce(
+            'profile__punteggio_bonus', # Accedi tramite la relazione 'profile'
+            Value(0.0),
+            output_field=FloatField()
+        )
+    ).annotate(
+        # Calcola il punteggio totale reale sommando risposte e bonus
+        punteggio_totale_reale=F('punti_da_risposte') + F('punti_bonus_profilo')
+    ).filter(
+        # Mostra solo utenti che hanno risposte corrette OPPURE un bonus diverso da zero
+        Q(rispostautente__is_corretta=True) | ~Q(profile__punteggio_bonus=0.0)
+    ).distinct().order_by('-punteggio_totale_reale', 'username')
+    # .distinct() è importante quando usi filtri su relazioni multiple che potrebbero duplicare gli utenti
 
     context = {
-        'classifica': classifica_data,
+        'classifica': utenti_con_punteggio,
     }
     return render(request, 'enigmas/classifica.html', context)
 

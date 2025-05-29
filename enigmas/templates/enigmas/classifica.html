@@ -1,29 +1,28 @@
 {% extends 'enigmas/base.html' %}
-{% load static %} {# Rimosso commento, load static è utile #}
+{% load static %}
 
 {% block title %}Classifica Generale{% endblock %}
 
 {% block content %}
     <h2 class="border-bottom pb-2 mb-4 display-6">
-        <i class="bi bi-trophy-fill me-2"></i>Classifica Generale {# Icona Opzionale #}
+        <i class="bi bi-trophy-fill me-2"></i>Classifica Generale
     </h2>
 
     {% if classifica %}
-        {# Tabella Bootstrap #}
-        <div class="table-responsive shadow-sm rounded"> {# Wrapper per responsività e stile #}
-            <table class="table table-dark table-striped table-hover mb-0 align-middle"> {# Aggiunto mb-0 se dentro wrapper #}
-                <thead class="table-light"> {# Header più chiaro per contrasto #}
+        <div class="table-responsive shadow-sm rounded">
+            <table class="table table-dark table-striped table-hover mb-0 align-middle">
+                <thead class="table-light">
                     <tr>
-                        <th scope="col" class="text-center" style="width: 10%;">Posizione</th> {# Larghezza indicativa #}
+                        <th scope="col" class="text-center" style="width: 10%;">Posizione</th>
                         <th scope="col">Utente</th>
-                        <th scope="col" class="text-end">Punteggio Totale</th> {# Allineato a destra #}
+                        <th scope="col" class="text-end">Punteggio Totale</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for entry in classifica %}
-                    <tr>
-                        <td class="text-center fw-bold fs-5"> {# Posizione più grande #}
-                            {# Aggiungi icone per le prime posizioni #}
+                    {% for utente_entry in classifica %} {# Ho rinominato 'entry' in 'utente_entry' per chiarezza #}
+                    {# Evidenzia l'utente loggato #}
+                    <tr class="{% if utente_entry == request.user %}table-info text-dark fw-bold{% endif %}">
+                        <td class="text-center fw-bold fs-5">
                             {% if forloop.counter == 1 %}
                                 <i class="bi bi-award-fill text-warning" title="Primo Posto"></i>
                             {% elif forloop.counter == 2 %}
@@ -31,24 +30,28 @@
                             {% elif forloop.counter == 3 %}
                                 <i class="bi bi-award-fill" style="color:#cd7f32;" title="Terzo Posto"></i>
                             {% else %}
-                                {{ forloop.counter }}° {# Aggiunto ° #}
+                                {{ forloop.counter }}°
                             {% endif %}
                         </td>
                         <td>
-                             <i class="bi bi-person-fill me-2 text-secondary"></i>
-                             {# --- MODIFICA: Reso il nome utente un link al profilo --- #}
-                             <a href="{% url 'profile_view' username=entry.utente__username %}" class="link-light link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">{{ entry.utente__username }}</a>
-                             {# --- FINE MODIFICA --- #}
+                            <i class="bi bi-person-fill me-2 text-secondary"></i>
+                            {# --- MODIFICATO QUI: usa utente_entry.username --- #}
+                            <a href="{% url 'profile_view' username=utente_entry.username %}"
+                               class="{% if utente_entry == request.user %}link-dark{% else %}link-light{% endif %} link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">
+                               {{ utente_entry.username }}
+                            </a>
+                            {% if utente_entry == request.user %} (Tu){% endif %}
                         </td>
-                        <td class="text-end fs-5 fw-medium">{{ entry.punteggio_totale|floatformat:2 }}</td> {# Punteggio più grande e leggermente bold #}
+                        {# --- MODIFICATO QUI: usa utente_entry.punteggio_totale_reale --- #}
+                        <td class="text-end fs-5 fw-medium">{{ utente_entry.punteggio_totale_reale|floatformat:2 }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
     {% else %}
-        <div class="alert alert-secondary text-center" role="alert"> {# Aggiunto text-center #}
-            <i class="bi bi-info-circle-fill me-2"></i>Nessun punteggio registrato al momento. Risolvi l'enigma attivo per entrare in classifica!
+        <div class="alert alert-secondary text-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>Nessun punteggio registrato o nessun utente soddisfa i criteri per la classifica al momento. Risolvi qualche enigma o attendi aggiornamenti!
         </div>
     {% endif %}
 {% endblock %}

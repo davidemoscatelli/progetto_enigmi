@@ -18,7 +18,7 @@ class ProfileInline(admin.StackedInline):
     can_delete = False
     verbose_name_plural = 'Profilo Dettagliato'
     fk_name = 'user'
-    fields = ('bio',) # Aggiungi altri campi del profilo qui se li crei
+    fields = ('bio','punteggio_bonus') # Aggiungi altri campi del profilo qui se li crei
 
 class UserBadgeInline(admin.TabularInline):
     model = UserBadge
