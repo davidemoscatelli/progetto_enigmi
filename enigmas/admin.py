@@ -1,122 +1,68 @@
 # enigmas/admin.py
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from django.contrib.auth.models import User
-# Importa TUTTI i modelli che vuoi gestire nell'admin
-from .models import Enigma, RispostaUtente, Suggerimento, Profile, Badge, UserBadge, Notifica, MessaggioEnigmista# <-- Importato anche Notifica
+from .models import (
+    Enigma, Allegato, CampoRisposta, RispostaUtente, RispostaUtenteMultipla,
+    Profile, Badge, UserBadge, Notifica, MessaggioEnigmista
+)
 
-# --- INLINES (Definizioni per mostrarli dentro altri modelli) ---
-
-class SuggerimentoInline(admin.TabularInline):
-    model = Suggerimento
+# Inline per gestire modelli correlati dentro la pagina di un altro
+class AllegatoInline(admin.TabularInline):
+    model = Allegato
     extra = 1
-    fields = ('ordine', 'testo')
-    ordering = ('ordine',)
 
-class ProfileInline(admin.StackedInline):
-    model = Profile
-    can_delete = False
-    verbose_name_plural = 'Profilo Dettagliato'
-    fk_name = 'user'
-    fields = ('bio','punteggio_bonus') # Aggiungi altri campi del profilo qui se li crei
-
-class UserBadgeInline(admin.TabularInline):
-    model = UserBadge
-    extra = 0 # Non mostrare form vuoti
-    fields = ('badge', 'data_ottenimento')
-    readonly_fields = ('badge', 'data_ottenimento')
-    can_delete = False
-    verbose_name_plural = "Badges Ottenuti"
-    autocomplete_fields = ['badge'] # Rende più facile cercare/selezionare il badge
-
-# --- ADMIN PER MODELLI PRINCIPALI ---
+class CampoRispostaInline(admin.TabularInline):
+    model = CampoRisposta
+    extra = 1
+    fields = ('ordine', 'etichetta', 'risposta_corretta', 'is_domanda_principale')
 
 @admin.register(Enigma)
 class EnigmaAdmin(admin.ModelAdmin):
-    # Aggiunto notifica_inviata per vederlo/filtrarlo facilmente
-    list_display = ('titolo', 'testo_troncato', 'start_time', 'end_time', 'is_active', 'notifica_inviata')
-    list_filter = ('is_active', 'notifica_inviata', 'start_time')
-    search_fields = ('titolo', 'testo')
-    readonly_fields = ('end_time',)
-    inlines = [SuggerimentoInline] # Permette di aggiungere hint direttamente qui
+    list_display = ('titolo', 'start_time', 'end_time', 'is_active')
+    search_fields = ['titolo', 'testo']
+    list_filter = ['is_active']
+    inlines = [AllegatoInline, CampoRispostaInline]
 
-    def testo_troncato(self, obj):
-        if obj.testo:
-            return obj.testo[:75] + '...' if len(obj.testo) > 75 else obj.testo
-        return ""
-    testo_troncato.short_description = 'Testo Enigma (Troncato)'
+class RispostaUtenteMultiplaInline(admin.TabularInline):
+    model = RispostaUtenteMultipla
+    extra = 0
+    readonly_fields = ('campo', 'valore_inserito')
 
 @admin.register(RispostaUtente)
 class RispostaUtenteAdmin(admin.ModelAdmin):
-    list_display = ('utente', 'enigma', 'data_inserimento', 'is_corretta', 'punteggio', 'suggerimenti_usati')
-    list_filter = ('is_corretta', 'enigma__is_active', 'enigma', 'utente')
-    search_fields = ('utente__username', 'enigma__titolo', 'risposta_inserita')
-    readonly_fields = ('is_corretta', 'suggerimenti_usati')
-    autocomplete_fields = ['utente', 'enigma'] # Rende più facile selezionare
+    # CORREZIONE: Rimosso 'suggerimenti_usati' da entrambe le liste
+    list_display = ('utente', 'enigma', 'data_invio', 'is_completa_corretta', 'punteggio')
+    readonly_fields = ('utente', 'enigma', 'data_invio', 'is_completa_corretta', 'punteggio')
+    list_filter = ('enigma', 'is_completa_corretta')
+    search_fields = ('utente__username', 'enigma__titolo')
+    inlines = [RispostaUtenteMultiplaInline]
 
-# Rimuoviamo la vecchia registrazione di User/UserAdmin se presente
-try:
-    admin.site.unregister(User)
-except admin.sites.NotRegistered:
-    pass
-
-# Registra User con l'admin personalizzato che include Profile E Badge
-@admin.register(User)
-class UserAdmin(BaseUserAdmin):
-    inlines = (ProfileInline, UserBadgeInline, ) # Mostra Profile e Badges nella pagina User
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'date_joined')
-
+# Il resto del file rimane per gestire gli altri modelli
 @admin.register(Badge)
 class BadgeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'rarita', 'descrizione')
-    list_filter = ('rarita',)
-    search_fields = ('nome', 'descrizione')
+    list_display = ('nome', 'descrizione', 'icona')
+    search_fields = ('nome',)
 
 @admin.register(UserBadge)
 class UserBadgeAdmin(admin.ModelAdmin):
     list_display = ('utente', 'badge', 'data_ottenimento')
     list_filter = ('badge', 'utente')
-    readonly_fields = ('data_ottenimento',)
-    autocomplete_fields = ['utente', 'badge']
 
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'punteggio_bonus')
+    search_fields = ('user__username',)
 
-# --- NUOVA REGISTRAZIONE PER IL MODELLO NOTIFICA ---
 @admin.register(Notifica)
 class NotificaAdmin(admin.ModelAdmin):
-    list_display = ('utente', 'messaggio_troncato', 'tipo_notifica', 'letta', 'data_creazione', 'link_display')
-    list_filter = ('letta', 'tipo_notifica', 'data_creazione', 'utente')
+    list_display = ('utente', 'messaggio', 'letta', 'data_creazione')
+    list_filter = ('letta', 'utente')
     search_fields = ('utente__username', 'messaggio')
-    list_editable = ('letta',) # Permette di segnare come letta/non letta direttamente dalla lista
-    readonly_fields = ('data_creazione',)
-    autocomplete_fields = ['utente'] # Rende più facile selezionare l'utente se devi crearne manualmente
 
-    @admin.display(description='Messaggio (Troncato)')
-    def messaggio_troncato(self, obj):
-        limit = 75
-        if obj.messaggio:
-            return obj.messaggio[:limit] + '...' if len(obj.messaggio) > limit else obj.messaggio
-        return ""
-
-    @admin.display(description='Link')
-    def link_display(self, obj):
-        # Rende il link cliccabile nell'admin se presente
-        from django.utils.html import format_html
-        if obj.link:
-            return format_html('<a href="{}" target="_blank">Apri Link</a>', obj.link)
-        return "-" # Mostra un trattino se non c'è link
-# --- FINE REGISTRAZIONE NOTIFICA ---
-
-# NUOVA REGISTRAZIONE MESSAGGIO ENIGMISTA
 @admin.register(MessaggioEnigmista)
 class MessaggioEnigmistaAdmin(admin.ModelAdmin):
-    list_display = ('titolo', 'data_pubblicazione', 'pubblicato', 'testo_troncato')
-    list_filter = ('pubblicato', 'data_pubblicazione')
-    search_fields = ('titolo', 'testo')
-    list_editable = ('pubblicato',) # Permette di cambiare lo stato dalla lista
+    list_display = ('__str__', 'is_active', 'data_creazione')
+    list_filter = ('is_active',)
+    list_editable = ('is_active',)
 
-    @admin.display(description='Testo (Troncato)')
-    def testo_troncato(self, obj):
-        limit = 100
-        if obj.testo:
-            return obj.testo[:limit] + '...' if len(obj.testo) > limit else obj.testo
-        return ""
+admin.site.register(Allegato)
+admin.site.register(CampoRisposta)

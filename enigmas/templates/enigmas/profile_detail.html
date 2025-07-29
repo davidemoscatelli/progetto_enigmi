@@ -1,89 +1,68 @@
 {% extends 'enigmas/base.html' %}
-{% load static %}
 
 {% block title %}Profilo di {{ profile_user.username }}{% endblock %}
 
 {% block content %}
-    <h2 class="border-bottom pb-2 mb-4 display-6">
-        <i class="bi bi-person-circle me-2"></i>Profilo di {{ profile_user.username }}
-    </h2>
-
+<div class="container mt-4">
+    <h2 class="display-6">Profilo di {{ profile_user.username }}</h2>
+    
+    <h4 class="mt-4">Badge Ottenuti</h4>
     <div class="row">
-        <div class="col-md-8">
-            {# Informazioni Base #}
-            <div class="card shadow-sm mb-4">
+        {% for user_badge in badges %}
+        <div class="col-md-3 mb-3">
+            <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="card-title fs-5">Informazioni</h4>
-                    <p><strong>Username:</strong> {{ profile_user.username }}</p>
-                    <p><strong>Iscritto dal:</strong> {{ profile_user.date_joined|date:"d M Y" }}</p>
-                    {% if profile_user.profile.bio %}
-                        <p><strong>Bio:</strong> {{ profile_user.profile.bio|linebreaksbr }}</p>
-                    {% endif %}
-                    {# Link per modificare il profilo se è l'utente loggato #}
-                    {% if profile_user == user %}
-                        <a href="{% url 'password_change' %}" class="btn btn-sm btn-outline-warning"> {# <-- Nome URL cambiato #}
-                            <i class="bi bi-key-fill me-1"></i> Cambia Password
-                        </a>
-                    {% endif %}
+                    <i class="{{ user_badge.badge.icona }} fs-1"></i>
+                    <h5 class="card-title mt-2">{{ user_badge.badge.nome }}</h5>
+                    <p class="card-text"><small>{{ user_badge.badge.descrizione }}</small></p>
                 </div>
             </div>
-
-            {# Sezione Badge #}
-            <div class="card shadow-sm mb-4">
-               <div class="card-body">
-                   <h4 class="card-title fs-5"><i class="bi bi-award me-2"></i>Badge Ottenuti</h4>
-
-                   {# Verifica se l'utente ha badge #}
-                   {% if badges %}
-                       <div class="list-group list-group-flush"> {# Usiamo list-group per un elenco pulito #}
-                           {% for user_badge in badges %}
-                               <div class="list-group-item d-flex align-items-center bg-transparent px-0">
-                                   {# Icona basata sulla rarità (esempio) #}
-                                   <span class="me-3 fs-3">
-                                       {% if user_badge.badge.rarita == 'Oro' %}
-                                           <i class="bi bi-trophy-fill text-warning" title="Rarità: Oro"></i>
-                                       {% elif user_badge.badge.rarita == 'Argento' %}
-                                           <i class="bi bi-trophy-fill text-secondary" title="Rarità: Argento"></i>
-                                       {% elif user_badge.badge.rarita == 'Bronzo' %}
-                                           <i class="bi bi-trophy-fill" style="color:#cd7f32;" title="Rarità: Bronzo"></i>
-                                       {% else %} {# Comune #}
-                                            <i class="bi bi-patch-check-fill text-info" title="Rarità: Comune"></i>
-                                       {% endif %}
-                                   </span>
-                                   {# Dettagli Badge #}
-                                   <div class="flex-grow-1">
-                                       <h6 class="mb-0">{{ user_badge.badge.nome }}</h6>
-                                       <small class="text-body-secondary"
-                                              data-bs-toggle="tooltip"
-                                              data-bs-placement="top"
-                                              title="{{ user_badge.badge.descrizione }}"> {# Tooltip con descrizione #}
-                                           Ottenuto il: {{ user_badge.data_ottenimento|date:"d M Y" }}
-                                       </small>
-                                   </div>
-                               </div>
-                           {% endfor %}
-                       </div>
-                   {% else %}
-                       {# Messaggio se l'utente non ha ancora badge #}
-                       <p class="text-body-secondary"><em>Nessun badge ottenuto finora. Continua a giocare!</em></p>
-                   {% endif %}
-               </div>
-            </div>
-            {# Fine Sezione Badge #}
         </div>
-
-        <div class="col-md-4">
-            {# Statistiche (Esempio) #}
-             <div class="card shadow-sm mb-4">
-                <div class="card-body text-center">
-                    <h4 class="card-title fs-5">Punteggio Totale</h4>
-                    <p class="display-4 fw-bold">{{ punteggio_totale|floatformat:2 }}</p>
-                     {# Potresti aggiungere altre statistiche qui #}
-                     {# Es: Posizione in classifica, Enigmi Risolti #}
-                </div>
-             </div>
-             {# Potresti aggiungere altre card qui #}
+        {% empty %}
+        <div class="col">
+            <p>Nessun badge ancora ottenuto.</p>
         </div>
+        {% endfor %}
     </div>
 
+    <hr class="my-4">
+
+    <h4 class="mt-4">Storico Risposte</h4>
+    <div class="accordion" id="storicoAccordion">
+        {% for risposta in risposte %}
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="heading-{{ risposta.id }}">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ risposta.id }}">
+                    <strong>{{ risposta.enigma.titolo }}</strong> - 
+                    <span class="ms-2 badge {% if risposta.is_completa_corretta %}bg-success{% else %}bg-danger{% endif %}">
+                        {% if risposta.is_completa_corretta %}Soluzione Corretta{% else %}Soluzione Errata{% endif %}
+                    </span>
+                </button>
+            </h2>
+            <div id="collapse-{{ risposta.id }}" class="accordion-collapse collapse" data-bs-parent="#storicoAccordion">
+                <div class="accordion-body">
+                    <h6>Dettaglio Risposte:</h6>
+                    <ul>
+                        {% for dettaglio in risposta.risposte_multiple.all %}
+                            <li>
+                                <strong>{{ dettaglio.campo.etichetta }}:</strong> "{{ dettaglio.valore_inserito }}"
+                                {% if dettaglio.is_corretta %}
+                                    <span class="text-success">(Corretta)</span>
+                                {% else %}
+                                    <span class="text-danger">(Errata)</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                    <small class="text-muted">Inviato il: {{ risposta.data_invio|date:"d/m/Y H:i" }}</small>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">
+            Nessuna risposta inviata.
+        </div>
+        {% endfor %}
+    </div>
+</div>
 {% endblock %}

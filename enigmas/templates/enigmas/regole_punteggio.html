@@ -1,79 +1,54 @@
 {% extends 'enigmas/base.html' %}
-{% load static %} {# Rimosso commento, load static è utile #}
 
 {% block title %}Regolamento e Punteggio{% endblock %}
 
 {% block content %}
-    <h2 class="border-bottom pb-2 mb-4 display-6">
-        <i class="bi bi-calculator-fill me-2"></i>Regolamento e Punteggio
-    </h2>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
 
-    {# Card principale #}
-    <div class="card shadow-sm mb-4">
-        <div class="card-body p-4">
+            <h2 class="display-5 text-center mb-4">Regolamento del Gioco</h2>
+            <p class="lead text-center mb-5">Benvenuto, detective. Il tuo obiettivo è analizzare il materiale fornito, collegare gli indizi e risolvere il caso nel tempo limite. Il tuo ingegno e la tua rapidità saranno messi alla prova.</p>
+            <h4 class="display-5 text-center mb-4">E' vietato l'utilizzo di qualsiasi forma di IA o strumento che ne sfrutta le potenzialità al fine della risoluzione dei casi!</h4>
+            <div class="card border-primary shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="my-0">Come viene calcolato il Punteggio?</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p>Il punteggio finale per ogni enigma è la somma di tre componenti principali. Per ottenere qualsiasi punto, però, è obbligatorio rispondere correttamente alla domanda chiave del caso.</p>
+                    
+                    <div class="alert alert-danger" role="alert">
+                        <h5 class="alert-heading">⚠️ Regola Fondamentale: La Domanda Principale</h5>
+                        <p>Per ottenere un punteggio, è <strong>assolutamente necessario</strong> rispondere correttamente alla domanda principale del caso (es. "Chi è il colpevole?"). Se questa risposta è sbagliata, il tuo punteggio totale per l'enigma sarà <strong>zero</strong>, anche se tutte le altre risposte fossero corrette.</p>
+                    </div>
 
-            <p class="lead">
-                Benvenuto Sfidante! Questa sezione svela i meccanismi dietro l'assegnazione dei punti nel Portale degli Enigmi. Risolvere correttamente gli enigmi ti farà guadagnare punti preziosi, ma attenzione: anche l'uso dei suggerimenti influenzerà il tuo punteggio finale!
-            </p>
-
-            <hr class="my-4"> {# Separatore #}
-
-            <h3 class="mt-4 fs-4"><i class="bi bi-clock-history me-2 text-info"></i>Il Fattore Tempo (Punteggio Base)</h3>
-            <p>
-                Il concetto chiave è il <strong>tempo</strong>. Ogni enigma dura esattamente <strong>7 giorni</strong> (168 ore) dal momento del rilascio. Il punteggio base ottenuto (prima di considerare i suggerimenti) dipende da quanto rapidamente fornisci la **prima risposta corretta**:
-            </p>
-            <ul class="list-unstyled ms-3"> {# Aggiunto margine #}
-                <li><i class="bi bi-check-lg text-success me-2"></i><strong>Risposte più rapide ottengono un punteggio base più alto</strong> (vicino a 10).</li>
-                <li><i class="bi bi-dash-lg text-warning me-2"></i><strong>Più ti avvicini alla scadenza, più basso sarà il punteggio base</strong> (vicino a 0).</li>
-            </ul>
-            <p class="mt-2">
-                La formula concettuale per il punteggio base è:
-            </p>
-            <pre class="bg-dark p-3 rounded my-3"><code class="text-warning language-plaintext">Punteggio Base ≈ 10 * (Tempo Rimanente / Tempo Totale)</code></pre>
-            <ul>
-                <li><strong>Tempo Rimanente:</strong> Secondi tra l'invio della risposta corretta e la scadenza dei 7 giorni.</li>
-                <li><strong>Tempo Totale:</strong> 7 giorni (in secondi).</li>
-            </ul>
-            <p class="text-muted fst-italic small">Esempi (senza considerare i suggerimenti): Rispondere subito ≈ 10 punti; Rispondere a metà tempo ≈ 5 punti; Rispondere alla fine ≈ 0 punti.</p>
-
-            <hr class="my-4"> {# Separatore #}
-
-            {# --- NUOVA SEZIONE SUGGERIMENTI --- #}
-            <h3 class="mt-4 fs-4"><i class="bi bi-lightbulb-fill me-2 text-info"></i>Sistema di Suggerimenti (Hints)</h3>
-             <p>
-                 Sei bloccato su un enigma particolarmente ostico? L'Enigmista concede un piccolo aiuto, ma a un prezzo!
-             </p>
-            <ul class="list-unstyled ms-3">
-                <li><i class="bi bi-check-lg text-success me-2"></i>Puoi richiedere fino a un massimo di **3 suggerimenti** per ogni enigma.</li>
-                <li><i class="bi bi-check-lg text-success me-2"></i>Richiedili tramite l'apposito pulsante sulla pagina dell'enigma attivo.</li>
-                <li><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>**Penalità:** Ogni suggerimento richiesto **riduce il punteggio ottenuto per quell'enigma del 10%**. La riduzione è cumulativa.</li>
-            </ul>
-             <h4 class="mt-3 fs-5"><i class="bi bi-calculator text-secondary me-2"></i>Esempio Calcolo Penalità:</h4>
-             <p>Supponiamo che il tuo tempo di risposta ti dia diritto a un punteggio base di <strong>8.5</strong> punti:</p>
-             <ul class="list-group list-group-flush mb-3">
-                <li class="list-group-item bg-transparent"><strong class="text-warning">1 Suggerimento Usato:</strong> Penalità 10%. Punteggio Finale = 8.5 * (1 - 0.10) = <strong>7.65</strong> punti.</li>
-                <li class="list-group-item bg-transparent"><strong class="text-warning">2 Suggerimenti Usati:</strong> Penalità 20%. Punteggio Finale = 8.5 * (1 - 0.20) = <strong>6.80</strong> punti.</li>
-                <li class="list-group-item bg-transparent"><strong class="text-warning">3 Suggerimenti Usati:</strong> Penalità 30%. Punteggio Finale = 8.5 * (1 - 0.30) = <strong>5.95</strong> punti.</li>
-             </ul>
-             <p class="fst-italic">Rifletti bene prima di chiedere aiuto!</p>
-            {# --- FINE NUOVA SEZIONE --- #}
-
-            <hr class="my-4"> {# Separatore #}
-
-            <h3 class="mt-4 fs-4"><i class="bi bi-clipboard-check-fill me-2 text-info"></i>Note Finali sul Punteggio</h3>
-            <div class="alert alert-secondary mt-3">
-                <ul class="mb-0">
-                    <li>Il punteggio finale visibile in classifica e nel tuo profilo tiene già conto delle eventuali penalità per i suggerimenti.</li>
-                    <li>Una <strong>risposta errata</strong> non dà penalità diretta, ma fa perdere tempo prezioso per ottenere un punteggio base alto.</li>
-                    <li>Una risposta inviata <strong>dopo la scadenza</strong> dell'enigma vale sempre **0 punti**.</li>
-                    <li>Solo la **prima risposta corretta** inviata per un enigma contribuisce al tuo punteggio e alla classifica.</li>
-                </ul>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item px-0">
+                            <h5>1. Punteggio Base <span class="badge bg-success float-end">+50 Punti</span></h5>
+                            <p class="mb-1">Indovinando la risposta alla **domanda principale**, sblocchi un punteggio base di partenza.</p>
+                        </li>
+                        <li class="list-group-item px-0">
+                            <h5>2. Punti Aggiuntivi <span class="badge bg-info float-end">+25 Punti cad.</span></h5>
+                            <p class="mb-1">Ogni **domanda secondaria** a cui rispondi correttamente ti garantisce un bonus fisso. Più dettagli del caso risolvi, più il tuo punteggio cresce!</p>
+                        </li>
+                        <li class="list-group-item px-0">
+                            <h5>3. Bonus Tempo <span class="badge bg-warning float-end">Fino a +50 Punti</span></h5>
+                            <p class="mb-1">La rapidità è premiata! Un bonus speciale viene calcolato in base a quanto velocemente risolvi il caso. Il bonus è massimo all'inizio dell'enigma e decresce linearmente fino a zero allo scadere del tempo. Risolvere il caso nei primi giorni ti garantirà un bonus molto più alto!</p>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer text-muted">
+                    In bocca al lupo!
+                </div>
             </div>
 
-            <p class="mt-4 text-center fw-bold fs-5">
-                Ora conosci le regole. Affina la tua mente, sii rapido e scala la classifica!
-            </p>
+            <div class="mt-5 text-center">
+                <h4>Principi di Fair Play</h4>
+                <p>Questo è un gioco di abilità e deduzione individuale. Ti chiediamo di non condividere soluzioni o indizi con altri giocatori per non rovinare l'esperienza di gioco a nessuno. Che vinca il miglior detective!</p>
+                
+            </div>
 
-        </div> {# fine card-body #}
-    </div> {# fine card #}
+        </div>
+    </div>
+</div>
 {% endblock %}

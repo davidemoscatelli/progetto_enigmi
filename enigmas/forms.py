@@ -2,14 +2,16 @@
 from django import forms
 from .models import RispostaUtente
 
-class RispostaForm(forms.ModelForm):
-    risposta_inserita = forms.CharField(
-        label="La tua Risposta",
-        widget=forms.TextInput(attrs={'placeholder': 'Inserisci qui la soluzione...'}),
-        max_length=255,
-        required=True
-    )
+class RispostaMultiplaForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        # Riceve i campi risposta dalla vista
+        campi_risposta = kwargs.pop('campi_risposta')
+        super().__init__(*args, **kwargs)
 
-    class Meta:
-        model = RispostaUtente
-        fields = ['risposta_inserita'] # Solo questo campo deve essere mostrato nel form
+        # Crea un campo di input per ogni 'CampoRisposta'
+        for campo in campi_risposta:
+            self.fields[f'campo_{campo.id}'] = forms.CharField(
+                label=campo.etichetta,
+                required=True,
+                widget=forms.TextInput(attrs={'class': 'form-control mb-2'})
+            )

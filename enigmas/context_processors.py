@@ -1,12 +1,10 @@
-# enigmas/context_processors.py
 from .models import Notifica
 
-def unread_notifications_count(request):
+def unread_notifications_context(request):
     """
-    Aggiunge il conteggio delle notifiche non lette al contesto del template
-    per l'utente autenticato.
+    Provides the count of unread notifications to all templates.
     """
-    count = 0
     if request.user.is_authenticated:
         count = Notifica.objects.filter(utente=request.user, letta=False).count()
-    return {'unread_notifications_count': count}
+        return {'unread_notifications_count': count}
+    return {}
