@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.urls import reverse
+from django.utils import timezone
 from .models import Profile, RispostaUtente, Badge, UserBadge, Notifica, Enigma
 
 @receiver(post_save, sender=User)
