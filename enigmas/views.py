@@ -1,14 +1,20 @@
-# enigmas/views.py
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.views import LoginView as BaseLoginView
 from django.utils import timezone
-from django.db.models import Sum, Q, Value, FloatField, F
+from django.db.models import Sum, F
 from django.contrib import messages
 from .models import Enigma, Allegato, CampoRisposta, RispostaUtente, RispostaUtenteMultipla, UserBadge, Notifica
 from .forms import RispostaMultiplaForm
 from django.contrib.auth.models import User
 from django.db.models.functions import Coalesce
+from django.urls import reverse_lazy
+
+# --- RIGA MANCANTE AGGIUNTA QUI ---
+from allauth.account.views import SignupView, LoginView
+
+#
+# Le tue viste esistenti (enigma_view, classifica_view, etc.)
+#
 
 @login_required
 def enigma_view(request):
@@ -20,7 +26,6 @@ def enigma_view(request):
     if enigma_corrente.end_time < now:
         return render(request, 'enigmas/enigma_detail.html', {'messaggio_scaduto': 'Tempo scaduto!'})
 
-    # --- CALCOLO DEL TEMPO CORRETTO ---
     delta = enigma_corrente.end_time - now
     time_remaining = {
         'days': delta.days,
@@ -28,7 +33,6 @@ def enigma_view(request):
         'minutes': (delta.seconds % 3600) // 60,
         'seconds': delta.seconds % 60
     }
-    # --- FINE CALCOLO ---
     
     allegati = Allegato.objects.filter(enigma=enigma_corrente)
     campi_risposta = CampoRisposta.objects.filter(enigma=enigma_corrente).order_by('ordine')
@@ -94,12 +98,11 @@ def enigma_view(request):
     }
     return render(request, 'enigmas/enigma_detail.html', context)
 
-
 @login_required
 def classifica_view(request):
     utenti = User.objects.filter(is_active=True).annotate(
-        punti_da_risposte=Coalesce(Sum('risposte__punteggio'), Value(0.0)),
-        punti_bonus=Coalesce(F('profile__punteggio_bonus'), Value(0.0))
+        punti_da_risposte=Coalesce(Sum('risposte__punteggio'), 0.0),
+        punti_bonus=Coalesce(F('profile__punteggio_bonus'), 0.0)
     ).annotate(
         punteggio_totale_reale=F('punti_da_risposte') + F('punti_bonus')
     ).filter(punteggio_totale_reale__gt=0).order_by('-punteggio_totale_reale', 'username')
@@ -128,11 +131,9 @@ def lista_notifiche(request):
 def regole_punteggio_view(request):
     return render(request, 'enigmas/regole_punteggio.html')
 
-class CustomLoginView(BaseLoginView):
-    template_name = 'enigmas/login.html'
-
- 
+# --- VISTA DI REGISTRAZIONE CUSTOM ---
 class CustomSignupView(SignupView):
     # Dopo una registrazione andata a buon fine, reindirizza sempre
     # alla pagina che mostra il messaggio di "account inattivo".
     success_url = reverse_lazy("account_inactive")
+
