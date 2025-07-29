@@ -24,19 +24,16 @@
                 <form class="login" method="POST" action="{% url 'account_login' %}">
                     {% csrf_token %}
 
-                    {# Campo Login (Username o Email) #}
                     <div class="mb-3">
                         <label for="{{ form.login.id_for_label }}" class="form-label">Login:</label>
                         {{ form.login }}
                     </div>
 
-                    {# Campo Password #}
                     <div class="mb-3">
                         <label for="{{ form.password.id_for_label }}" class="form-label">Password:</label>
                         {{ form.password }}
                     </div>
 
-                    {# Campo "Ricordami" #}
                     {% if form.remember %}
                     <div class="form-check mb-4">
                         {{ form.remember }}
@@ -53,12 +50,13 @@
                     <button class="btn btn-primary w-100 btn-lg" type="submit">Accedi</button>
                 </form>
 
+                {# La sezione "Password dimenticata?" è stata rimossa #}
+
             </div>
         </div>
     </div>
 </div>
 
-{# Stile per rendere i campi del form coerenti con il tema dark, come nello screenshot #}
 <style>
     .login input[type="text"],
     .login input[type="password"],
