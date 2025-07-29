@@ -1,12 +1,19 @@
+# enigma_project/settings.py
+
 import os
 from pathlib import Path
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-dev-key')
+SECRET_KEY = os.environ.get('SECRET_KEY')
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+# Se SECRET_KEY non è impostata e siamo in locale, usane una di default
+if not SECRET_KEY and DEBUG:
+    SECRET_KEY = 'django-insecure-chiave-provvisoria-per-sviluppo-locale'
+
+# --- CONFIGURAZIONE HOSTS PER RENDER ---
 ALLOWED_HOSTS_ENV = os.environ.get('ALLOWED_HOSTS', '')
 ALLOWED_HOSTS = ALLOWED_HOSTS_ENV.split(',') if ALLOWED_HOSTS_ENV else []
 RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -14,6 +21,16 @@ if RENDER_EXTERNAL_HOSTNAME:
     ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 if DEBUG:
     ALLOWED_HOSTS.extend(['localhost', '127.0.0.1'])
+
+
+# --- CONFIGURAZIONE DI SICUREZZA CSRF (LA SOLUZIONE) ---
+# Diciamo a Django di fidarsi del dominio di Render per le richieste POST (login/registrazione)
+CSRF_TRUSTED_ORIGINS = []
+if RENDER_EXTERNAL_HOSTNAME:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_EXTERNAL_HOSTNAME}")
+# Se hai un dominio custom, aggiungilo qui
+# CSRF_TRUSTED_ORIGINS.append("https://illusiongame.me")
+
 
 INSTALLED_APPS = [
     'django.contrib.admin', 'django.contrib.auth', 'django.contrib.contenttypes',
@@ -63,19 +80,17 @@ LOGIN_REDIRECT_URL = '/'
 LOGIN_URL = 'account_login'
 LOGOUT_REDIRECT_URL = '/'
 
-# --- CONFIGURAZIONE EMAIL SEMPLIFICATA ---
-# Non proveremo mai a inviare email reali. Verranno stampate nei log.
+# --- CONFIGURAZIONE EMAIL SEMPLIFICATA (COME CONCORDATO) ---
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# --- IMPOSTAZIONI PER SISTEMA DI APPROVAZIONE MANUALE ---
+# --- IMPOSTAZIONI PER SISTEMA DI APPROVAZIONE MANUALE (COME CONCORDATO) ---
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_ADAPTER = 'enigmas.adapters.AccountAdapter'
 
 # Impostazioni rimanenti di django-allauth
+AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', 'allauth.account.auth_backends.AuthenticationBackend',)
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Illusion Game] '
-# La riga seguente non è più rilevante senza email, ma non causa problemi
-ACCOUNT_LOGIN_ON_PASSWORD_RESET = True
