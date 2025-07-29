@@ -130,3 +130,9 @@ def regole_punteggio_view(request):
 
 class CustomLoginView(BaseLoginView):
     template_name = 'enigmas/login.html'
+
+ 
+class CustomSignupView(SignupView):
+    # Dopo una registrazione andata a buon fine, reindirizza sempre
+    # alla pagina che mostra il messaggio di "account inattivo".
+    success_url = reverse_lazy("account_inactive")
