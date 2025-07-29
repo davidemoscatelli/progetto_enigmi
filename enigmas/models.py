@@ -101,9 +101,12 @@ class Notifica(models.Model):
     messaggio = models.CharField(max_length=255)
     data_creazione = models.DateTimeField(auto_now_add=True)
     letta = models.BooleanField(default=False)
-    url = models.CharField(max_length=255, blank=True, null=True)
+    # --- CORREZIONE: Rinominato il campo da 'url' a 'link' ---
+    link = models.CharField(max_length=255, blank=True, null=True)
+    
     def __str__(self):
         return f"Notifica per {self.utente.username}: {self.messaggio[:30]}"
+    
     class Meta:
         ordering = ['-data_creazione']
 
