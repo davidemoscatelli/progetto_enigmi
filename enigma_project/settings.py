@@ -87,21 +87,20 @@ CSRF_TRUSTED_ORIGINS_ENV = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = CSRF_TRUSTED_ORIGINS_ENV.split(',') if CSRF_TRUSTED_ORIGINS_ENV else []
 if RENDER_EXTERNAL_HOSTNAME and f'https://{RENDER_EXTERNAL_HOSTNAME}' not in CSRF_TRUSTED_ORIGINS:
      CSRF_TRUSTED_ORIGINS.append(f'https://{RENDER_EXTERNAL_HOSTNAME}')
+
+# Impostazioni Email
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     print("INFO: Usando Console Email Backend (DEBUG=True)")
 else:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
-    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL')
-    if not all([EMAIL_HOST, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL]):
-        print("ATTENZIONE: Variabili d'ambiente EMAIL_* non completamente configurate!")
-    else:
-        print(f"INFO: Usando SMTP Email Backend ({EMAIL_HOST}:{EMAIL_PORT})")
+    # --- MODIFICA DI SICUREZZA PER IL DEBUG IN PRODUZIONE ---
+    # Invece di usare SMTP, che può fallire se le variabili non sono impostate,
+    # usiamo il backend 'console' che stampa le email nei log di Render.
+    # Questo previene il crash del server (errore 500) durante il login.
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("ATTENZIONE: L'email backend di produzione è impostato su 'console' per il debug.")
+    # Una volta che le variabili d'ambiente per SendGrid saranno corrette su Render,
+    # potrai ripristinare la configurazione SMTP originale.
 
 # --- MODIFICHE PER SISTEMA DI APPROVAZIONE ---
 # 1. Disattiva la verifica via email obbligatoria
