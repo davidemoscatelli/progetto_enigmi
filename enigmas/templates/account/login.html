@@ -21,27 +21,57 @@
 
                 {% if form.errors and not form.non_field_errors %}
                  <div class="alert alert-danger" role="alert">
-                    {% trans "Username o password errati." %} {# Messaggio generico per sicurezza #}
+                     {% trans "Username o password errati." %} {# Messaggio generico per sicurezza #}
                  </div>
                 {% endif %}
                 {% if form.non_field_errors %}
                 <div class="alert alert-danger" role="alert">
                     {% for error in form.non_field_errors %}
-                       <p class="mb-0">{{ error }}</p>
+                        <p class="mb-0">{{ error }}</p>
                     {% endfor %}
-                 </div>
+                    </div>
                 {% endif %}
 
 
                 <form class="login" method="POST" action="{% url 'account_login' %}">
                     {% csrf_token %}
 
-                    {{ form.as_p }} {# Renderizza i campi del form (Username/Email, Password, Remember Me) #}
+                    {# --- Campo Login (Username o Email) --- #}
+                    <div class="mb-3">
+                        <label for="{{ form.login.id_for_label }}" class="form-label">{% trans "Login" %}</label>
+                        {{ form.login }}
+                        {% for error in form.login.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
 
-                    {% if redirect_field_value %}
-                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {# --- Campo Password --- #}
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">{% trans "Password" %}</label>
+                        {{ form.password }}
+                        {% for error in form.password.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    {# --- Checkbox "Ricordami" con la struttura corretta --- #}
+                    {% if form.remember %}
+                    <div class="form-check mb-3">
+                        {{ form.remember }}
+                        <label class="form-check-label" for="{{ form.remember.id_for_label }}">
+                            {% trans "Ricordami" %}
+                        </label>
+                    </div>
                     {% endif %}
 
+                    {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% endif %}
+
+                    {# Link per il reset della password, ora puoi controllarlo #}
+                    <div class="text-center mb-4">
+                        <a href="{% url 'account_reset_password' %}">{% trans "Password dimenticata?" %}</a>
+                    </div>
 
                     <button class="btn btn-primary w-100" type="submit">{% trans "Accedi" %}</button>
                 </form>
