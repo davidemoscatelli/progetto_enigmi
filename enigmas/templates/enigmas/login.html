@@ -21,9 +21,9 @@
                     </div>
                 {% endif %}
 
-                <form class="login" method="POST" action="{% url 'account_login' %}">
+                <form class="login text-center" method="POST" action="{% url 'account_login' %}">
                     {% csrf_token %}
-
+                    
                     <div class="mb-3">
                         <label for="{{ form.login.id_for_label }}" class="form-label">Login:</label>
                         {{ form.login }}
@@ -35,52 +35,29 @@
                     </div>
 
                     {% if form.remember %}
-                    <div class="form-check mb-4">
+                    <div class="form-check d-inline-block mb-3">
                         {{ form.remember }}
                         <label class="form-check-label" for="{{ form.remember.id_for_label }}">
                             Ricordami
                         </label>
                     </div>
                     {% endif %}
+                    
+                    <p class="text-center">
+                        <a href="{% url 'account_reset_password' %}">Password dimenticata?</a>
+                    </p>
 
                     {% if redirect_field_value %}
                         <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
                     {% endif %}
 
-                    <button class="btn btn-primary w-100 btn-lg" type="submit">Accedi</button>
+                    <button class="btn btn-primary w-100 btn-lg mt-2" type="submit">Accedi</button>
                 </form>
-
-                {# La sezione "Password dimenticata?" è stata rimossa #}
 
             </div>
         </div>
     </div>
 </div>
 
-<style>
-    .login input[type="text"],
-    .login input[type="password"],
-    .login input[type="email"] {
-        background-color: #1a1d20;
-        color: #f8f9fa;
-        border: 1px solid #495057;
-        width: 100%;
-        padding: .5rem .75rem;
-        border-radius: .375rem;
-        line-height: 1.5;
-    }
-    .login input[type="text"]:focus,
-    .login input[type="password"]:focus,
-    .login input[type="email"]:focus {
-        background-color: #1a1d20;
-        color: #f8f9fa;
-        border-color: #80bdff;
-        outline: 0;
-        box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .25);
-    }
-    .login .form-check-input {
-        background-color: #343a40;
-        border-color: #495057;
-    }
-</style>
+
 {% endblock %}

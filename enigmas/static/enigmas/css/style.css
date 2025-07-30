@@ -1,5 +1,7 @@
 /* enigmas/static/enigmas/css/style.css */
 
+/* enigmas/static/enigmas/css/style.css */
+
 body {
     background-color: #1a1a1a; /* Sfondo molto scuro */
     color: #e0e0e0; /* Testo grigio chiaro */
@@ -31,7 +33,6 @@ nav {
 nav a {
     color: #b0bec5; /* Grigio-azzurro chiaro per i link */
     text-decoration: none;
-    /*margin: 0 1rem;*/
     transition: color 0.3s ease;
 }
 
@@ -41,7 +42,6 @@ nav a:hover, nav a:focus {
 
 nav span {
     color: #cfd8dc; /* Grigio più chiaro per il benvenuto */
-    /*margin-right: 1rem;*/
 }
 
 .logout-button {
@@ -53,12 +53,6 @@ nav span {
     font-family: inherit;
     font-size: 0.9rem;
     transition: all 0.3s ease;
-}
-
-.logout-button:hover {
-    background-color: #e53935;
-    color: #1a1a1a;
-    border-color: #e53935;
 }
 
 main {
@@ -110,36 +104,50 @@ h2, h3 {
     min-width: 250px; /* Assicura spazio sufficiente */
 }
 
-/* Form */
+/* === SEZIONE FORM CORRETTA === */
 .risposta-form label,
-.login-form label {
+.login label {
     display: block;
     margin-bottom: 0.5rem;
     color: #b0bec5;
+    text-align: center;
 }
 
 .risposta-form input[type="text"],
-.login-form input[type="text"],
-.login-form input[type="password"] {
-    width: calc(100% - 22px); /* Considera padding e border */
+.login input[type="text"],
+.login input[type="password"],
+.login input[type="email"] {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 1rem auto;
     padding: 10px;
-    margin-bottom: 1rem;
     background-color: #333;
     border: 1px solid #555;
     color: #e0e0e0;
     font-size: 1rem;
+    text-align: center;
+}
+
+/* Nasconde il link "Password dimenticata?" extra generato da allauth */
+.login div > a {
+    display: none;
 }
 
 .risposta-form input[type="text"]:focus,
-.login-form input[type="text"]:focus,
-.login-form input[type="password"]:focus {
+.login input[type="text"]:focus,
+.login input[type="password"]:focus {
      outline: none;
      border-color: #ff7043; /* Arancione scuro sul focus */
      box-shadow: 0 0 5px rgba(255, 112, 67, 0.5);
 }
 
 .risposta-form button,
-.login-form button {
+.login button {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 1.5rem auto 0 auto;
     background-color: #e53935; /* Rosso scuro */
     color: #fff;
     border: none;
@@ -152,9 +160,10 @@ h2, h3 {
 }
 
 .risposta-form button:hover,
-.login-form button:hover {
+.login button:hover {
     background-color: #c62828; /* Rosso più scuro */
 }
+/* === FINE SEZIONE FORM === */
 
 /* Messaggi Utente (Success, Warning, Error) */
 .messages {
@@ -247,10 +256,10 @@ h2, h3 {
 }
 
 .classifica-table td:first-child {
-     font-weight: bold;
-     text-align: center;
-     width: 80px; /* Larghezza fissa per posizione */
-     color: #ffcc00; /* Oro per la posizione */
+      font-weight: bold;
+      text-align: center;
+      width: 80px; /* Larghezza fissa per posizione */
+      color: #ffcc00; /* Oro per la posizione */
 }
 
 
@@ -267,7 +276,7 @@ footer {
 
 /* Rimuovi/Modifica gli stili :hover precedenti per .risposta-form button, ecc. */
 .risposta-form button:hover,
-.login-form button:hover,
+.login button:hover,
 .logout-button:hover {
   /* Rimuoviamo trasformazioni/background precedenti per non confliggere */
   background-color: initial; /* O imposta lo stesso di .magnetic-btn */
@@ -293,7 +302,7 @@ footer {
 
   /* Transizioni per il movimento e l'effetto */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), /* Transizione per il movimento */
-              color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+            color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
 
   /* Proprietà custom che verranno aggiornate da JS */
   --x: 50%;
@@ -351,8 +360,8 @@ footer {
     color: var(--text-primary); /* Testo bianco su sfondo chiaro */
 }
 .logout-button.magnetic-btn:hover::before {
-     opacity: 0.2; /* Effetto più leggero per bottone trasparente */
-     background: radial-gradient(circle closest-side, var(--text-primary), transparent);
+      opacity: 0.2; /* Effetto più leggero per bottone trasparente */
+      background: radial-gradient(circle closest-side, var(--text-primary), transparent);
 }
 
 .navbar-brand-custom {
