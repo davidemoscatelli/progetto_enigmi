@@ -1,17 +1,26 @@
 # enigmas/forms.py
 from django import forms
-from .models import RispostaUtente
+from .models import OpzioneRisposta
 
-class RispostaMultiplaForm(forms.Form):
+class RispostaCheckboxForm(forms.Form):
     def __init__(self, *args, **kwargs):
-        # Riceve i campi risposta dalla vista
+        # Riceve le "domande" (campi_risposta) dalla vista
         campi_risposta = kwargs.pop('campi_risposta')
         super().__init__(*args, **kwargs)
 
-        # Crea un campo di input per ogni 'CampoRisposta'
+        # Per ogni domanda, crea un campo a scelta multipla (checkbox)
         for campo in campi_risposta:
-            self.fields[f'campo_{campo.id}'] = forms.CharField(
+            self.fields[f'campo_{campo.id}'] = forms.ModelMultipleChoiceField(
+                # Le opzioni tra cui scegliere sono quelle collegate a questa specifica domanda
+                queryset=OpzioneRisposta.objects.filter(campo_risposta=campo),
+                
+                # Usa le checkbox per la visualizzazione
+                widget=forms.CheckboxSelectMultiple,
+                
+                # L'etichetta del gruppo di checkbox è la domanda stessa
                 label=campo.etichetta,
-                required=True,
-                widget=forms.TextInput(attrs={'class': 'form-control mb-2'})
+                
+                # Rendi il campo non obbligatorio, così l'utente può inviare il form
+                # anche se non risponde a tutte le domande.
+                required=False
             )

@@ -1,3 +1,4 @@
+# enigmas/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -35,17 +36,24 @@ class Allegato(models.Model):
     def __str__(self):
         return f"{self.nome} per '{self.enigma.titolo}'"
 
-# Modello CampoRisposta (invariato)
+# --- MODIFICA 1: CampoRisposta ora è solo la DOMANDA ---
 class CampoRisposta(models.Model):
     enigma = models.ForeignKey(Enigma, on_delete=models.CASCADE, related_name='campi_risposta')
-    etichetta = models.CharField(max_length=255, help_text="La domanda (es. 'Nome del colpevole')")
-    risposta_corretta = models.CharField(max_length=255)
+    etichetta = models.CharField(max_length=255, help_text="La domanda (es. 'Chi è il colpevole?')")
     ordine = models.PositiveIntegerField(default=0, help_text="Ordine di visualizzazione del campo nel form")
-    is_domanda_principale = models.BooleanField(default=False, help_text="Spunta questa casella se questa è la domanda principale che assegna il punteggio base.")
+    is_domanda_principale = models.BooleanField(default=False, help_text="Spunta se questa è la domanda principale.")
     class Meta:
         ordering = ['ordine']
     def __str__(self):
-        return f"Campo '{self.etichetta}' per '{self.enigma.titolo}'"
+        return f"Domanda '{self.etichetta}' per '{self.enigma.titolo}'"
+
+# --- NUOVO MODELLO: Le OPZIONI di risposta per ogni domanda ---
+class OpzioneRisposta(models.Model):
+    campo_risposta = models.ForeignKey(CampoRisposta, on_delete=models.CASCADE, related_name='opzioni')
+    testo = models.CharField(max_length=255, help_text="Il testo di una possibile risposta (es. 'Mario Rossi').")
+    is_corretta = models.BooleanField(default=False, help_text="Spunta se questa è una delle risposte corrette.")
+    def __str__(self):
+        return self.testo
 
 # Modello RispostaUtente (invariato)
 class RispostaUtente(models.Model):
@@ -58,30 +66,34 @@ class RispostaUtente(models.Model):
         unique_together = ('utente', 'enigma')
         ordering = ['-data_invio']
 
-# Modello RispostaUtenteMultipla (invariato)
+# --- MODIFICA 2: La logica di controllo ora usa il nuovo modello OpzioneRisposta ---
 class RispostaUtenteMultipla(models.Model):
     risposta_generale = models.ForeignKey(RispostaUtente, on_delete=models.CASCADE, related_name='risposte_multiple')
     campo = models.ForeignKey(CampoRisposta, on_delete=models.CASCADE)
     valore_inserito = models.CharField(max_length=255)
-    def is_corretta(self):
-        return self.valore_inserito.strip().lower() == self.campo.risposta_corretta.strip().lower()
 
-# Modello Profile (invariato)
+    def is_corretta(self):
+        # 1. Trova tutte le opzioni di risposta corrette per questa domanda
+        opzioni_corrette = OpzioneRisposta.objects.filter(campo_risposta=self.campo, is_corretta=True)
+        
+        # 2. Estrai il testo di ogni opzione corretta e normalizzalo (minuscolo, senza spazi)
+        risposte_corrette_set = {opzione.testo.strip().lower() for opzione in opzioni_corrette}
+
+        # 3. Prendi la risposta dell'utente, dividila per la virgola e normalizzala
+        risposte_inserite_set = {ans.strip().lower() for ans in self.valore_inserito.split(',') if ans.strip()}
+
+        # 4. La risposta è corretta se l'insieme delle risposte dell'utente è identico all'insieme delle risposte corrette
+        return risposte_corrette_set == risposte_inserite_set
+
+# ... (Il resto dei tuoi modelli: Profile, Badge, etc. rimane invariato) ...
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     punteggio_bonus = models.FloatField(default=0.0)
 
-# --- MODIFICA FONDAMENTALE QUI ---
 @receiver(post_save, sender=User)
 def create_or_update_user_profile(sender, instance, **kwargs):
-    """
-    Usa get_or_create per creare un profilo se non esiste.
-    Questo metodo è più sicuro e gestisce anche gli utenti creati manualmente.
-    """
     Profile.objects.get_or_create(user=instance)
-# --- FINE MODIFICA ---
 
-# Altri modelli (Badge, UserBadge, Notifica, etc. rimangono invariati)
 class Badge(models.Model):
     nome = models.CharField(max_length=100)
     descrizione = models.TextField()
@@ -101,12 +113,9 @@ class Notifica(models.Model):
     messaggio = models.CharField(max_length=255)
     data_creazione = models.DateTimeField(auto_now_add=True)
     letta = models.BooleanField(default=False)
-    # --- CORREZIONE: Rinominato il campo da 'url' a 'link' ---
     link = models.CharField(max_length=255, blank=True, null=True)
-    
     def __str__(self):
         return f"Notifica per {self.utente.username}: {self.messaggio[:30]}"
-    
     class Meta:
         ordering = ['-data_creazione']
 
@@ -116,3 +125,24 @@ class MessaggioEnigmista(models.Model):
     data_creazione = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"Messaggio del {self.data_creazione.strftime('%d/%m/%Y')}"
+    
+
+class RispostaUtenteMultipla(models.Model):
+    risposta_generale = models.ForeignKey(RispostaUtente, on_delete=models.CASCADE, related_name='risposte_multiple')
+    campo = models.ForeignKey(CampoRisposta, on_delete=models.CASCADE)
+    valore_inserito = models.CharField(max_length=255, blank=True)
+
+    def is_corretta(self):
+        """
+        Controlla se le opzioni scelte dall'utente corrispondono a quelle corrette nel database.
+        """
+        # 1. Trova il testo di tutte le opzioni corrette definite nell'admin
+        opzioni_corrette_db = OpzioneRisposta.objects.filter(campo_risposta=self.campo, is_corretta=True)
+        risposte_corrette_set = set(opzione.testo.strip().lower() for opzione in opzioni_corrette_db)
+
+        # 2. Prendi il testo salvato delle opzioni scelte dall'utente
+        risposte_inserite_set = set(ans.strip().lower() for ans in self.valore_inserito.split(',') if ans.strip())
+
+        # 3. La risposta è corretta se i due insiemi sono identici
+        return risposte_corrette_set == risposte_inserite_set
+    

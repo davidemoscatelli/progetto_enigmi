@@ -2,145 +2,117 @@
 {% load static %}
 
 {% block title %}
-    {% if enigma %}
-        {{ enigma.titolo }}
-    {% else %}
-        Enigma
-    {% endif %}
+    {% if enigma %}{{ enigma.titolo }}{% else %}Enigma{% endif %}
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
 
     {% if messaggio_attesa %}
-        <div class="alert alert-info text-center">
-            <h4>In Attesa...</h4>
-            <p>{{ messaggio_attesa }}</p>
-        </div>
+        <div class="alert alert-info text-center"><h4>In Attesa...</h4><p>{{ messaggio_attesa }}</p></div>
     {% elif messaggio_scaduto %}
-        <div class="alert alert-warning text-center">
-            <h4>Tempo Scaduto</h4>
-            <p>{{ messaggio_scaduto }}</p>
-        </div>
-
+        <div class="alert alert-warning text-center"><h4>Tempo Scaduto</h4><p>{{ messaggio_scaduto }}</p></div>
     {% elif enigma %}
 
-        {# --- TIMER (ORA CON DATA ATTRIBUTE PER JAVASCRIPT) --- #}
         {% if enigma.end_time %}
-            {# Usiamo il filtro |date:"c" per formattare la data in formato ISO 8601, leggibile da JS #}
             <div class="timer-container alert alert-primary text-center" data-end-time="{{ enigma.end_time|date:'c' }}">
                 <strong>Tempo Rimanente:</strong>
                 <span id="timer-display">Caricamento...</span>
             </div>
         {% endif %}
 
-        {# Dettagli Enigma #}
         <h2 class="display-6">{{ enigma.titolo }}</h2>
         <p class="lead">{{ enigma.testo|linebreaksbr }}</p>
         <hr>
 
-        {# Sezione Allegati #}
         <h3 class="mt-4">📂 Materiale del Caso</h3>
         <div class="row">
             {% for allegato in allegati %}
                 <div class="col-md-6 mb-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ allegato.nome }}</h5>
-                            {% if allegato.tipo_file == 'IMG' %}
-                                <img src="{{ allegato.file.url }}" class="img-fluid rounded" alt="{{ allegato.nome }}">
-                            {% elif allegato.tipo_file == 'AUD' %}
-                                <audio controls class="w-100"><source src="{{ allegato.file.url }}"></audio>
-                            {% elif allegato.tipo_file == 'VID' %}
-                                 <video controls class="w-100"><source src="{{ allegato.file.url }}"></video>
-                            {% elif allegato.tipo_file == 'DOC' %}
-                                <a href="{{ allegato.file.url }}" class="btn btn-outline-primary" target="_blank">Apri Documento</a>
-                            {% endif %}
-                        </div>
-                    </div>
+                    <div class="card"><div class="card-body">
+                        <h5 class="card-title">{{ allegato.nome }}</h5>
+                        {% if allegato.tipo_file == 'IMG' %}<img src="{{ allegato.file.url }}" class="img-fluid rounded" alt="{{ allegato.nome }}">
+                        {% elif allegato.tipo_file == 'AUD' %}<audio controls class="w-100"><source src="{{ allegato.file.url }}"></audio>
+                        {% elif allegato.tipo_file == 'VID' %}<video controls class="w-100"><source src="{{ allegato.file.url }}"></video>
+                        {% elif allegato.tipo_file == 'DOC' %}<a href="{{ allegato.file.url }}" class="btn btn-outline-primary" target="_blank">Apri Documento</a>
+                        {% endif %}
+                    </div></div>
                 </div>
             {% empty %}
-                <div class="col">
-                    <p>Nessun allegato per questo enigma.</p>
-                </div>
+                <div class="col"><p>Nessun allegato per questo enigma.</p></div>
             {% endfor %}
         </div>
         <hr class="my-4">
 
-        {# Sezione Risposta #}
-        {% if form %}
-            <div id="solution-form">
-                <h3 class="mt-4">📝 Invia la tua soluzione</h3>
-                <form method="post">
-                    {% csrf_token %}
-                    {{ form.as_p }}
-                    <button type="submit" class="btn btn-success btn-lg w-100 mt-3">Invia Rapporto</button>
-                </form>
+        <!-- SEZIONE RISPOSTE ESPANDIBILE -->
+        <div class="accordion" id="rispostaAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingRisposta">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRisposta" aria-expanded="false" aria-controls="collapseRisposta">
+                        {% if risposte_date %}
+                            <strong>Visualizza la tua Soluzione Inviata</strong>
+                        {% else %}
+                            <strong>Mostra/Nascondi Sezione Risposta</strong>
+                        {% endif %}
+                    </button>
+                </h2>
+                <div id="collapseRisposta" class="accordion-collapse collapse" aria-labelledby="headingRisposta">
+                    <div class="accordion-body">
+                        {% if form %}
+                            <h3 class="mt-2">📝 Invia la tua soluzione</h3>
+                            <form method="post">
+                                {% csrf_token %}
+                                {{ form.as_p }}
+                                <button type="submit" class="btn btn-success btn-lg w-100 mt-3">Invia Rapporto</button>
+                            </form>
+                        {% elif risposte_date %}
+                            <div class="alert {% if risposta_generale.is_completa_corretta %}alert-success{% else %}alert-danger{% endif %} mb-0">
+                                <h4 class="alert-heading">Hai già inviato la tua soluzione!</h4>
+                                <ul>
+                                    {% for risposta in risposte_date %}
+                                        <li>
+                                            <strong>{{ risposta.campo.etichetta }}:</strong> "{{ risposta.valore_inserito }}"
+                                            {% if risposta.is_corretta %} ✅ Corretta {% else %} ❌ Errata {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                                <hr>
+                                <p class="mb-0">Punteggio ottenuto per questo enigma: <strong>{{ risposta_generale.punteggio }}</strong></p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
-        {% elif risposte_date %}
-            <div class="alert {% if risposta_generale.is_completa_corretta %}alert-success{% else %}alert-danger{% endif %}">
-                <h4 class="alert-heading">Hai già inviato la tua soluzione!</h4>
-                 <ul>
-                    {% for risposta in risposte_date %}
-                        <li>
-                            <strong>{{ risposta.campo.etichetta }}:</strong> "{{ risposta.valore_inserito }}"
-                            {% if risposta.is_corretta %} ✅ Corretta {% else %} ❌ Errata {% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-                <hr>
-                <p class="mb-0">Punteggio ottenuto per questo enigma: <strong>{{ risposta_generale.punteggio }}</strong></p>
-            </div>
-        {% endif %}
+        </div>
+        <!-- FINE SEZIONE RISPOSTE ESPANDIBILE -->
 
     {% endif %}
-
 </div>
 
-{# --- SCRIPT JAVASCRIPT PER IL COUNTDOWN --- #}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const timerDisplay = document.getElementById('timer-display');
     const timerContainer = document.querySelector('.timer-container');
-
-    // Se l'elemento del timer esiste nella pagina...
     if (timerContainer && timerDisplay) {
-        // ...recupera la data di fine dal suo attributo 'data-end-time'
-        const endTimeString = timerContainer.dataset.endTime;
-        const endTime = new Date(endTimeString).getTime();
-
-        // Avvia un intervallo che si ripete ogni secondo (1000 millisecondi)
+        const endTime = new Date(timerContainer.dataset.endTime).getTime();
         const countdownInterval = setInterval(function() {
-            const now = new Date().getTime();
-            const distance = endTime - now;
-
-            // Se il tempo è scaduto
+            const distance = endTime - new Date().getTime();
             if (distance < 0) {
-                clearInterval(countdownInterval); // Ferma il countdown
+                clearInterval(countdownInterval);
                 timerDisplay.innerHTML = "Tempo Scaduto!";
                 timerContainer.classList.remove('alert-primary');
                 timerContainer.classList.add('alert-danger');
-                
-                // Nasconde il form di risposta se esiste
-                const formDiv = document.getElementById('solution-form');
-                if(formDiv) {
-                    formDiv.style.display = 'none';
-                }
+                const formDiv = document.getElementById('rispostaAccordion');
+                if(formDiv) { formDiv.style.display = 'none'; }
                 return;
             }
-
-            // Calcola giorni, ore, minuti e secondi
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
             const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-            // Aggiorna il testo del timer
             timerDisplay.innerHTML = `${days}g ${hours}h ${minutes}m ${seconds}s`;
-
         }, 1000);
     }
 });
 </script>
-
 {% endblock %}
