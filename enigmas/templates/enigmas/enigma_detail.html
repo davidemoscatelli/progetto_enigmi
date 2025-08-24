@@ -14,7 +14,7 @@
         <div class="alert alert-warning text-center"><h4>Tempo Scaduto</h4><p>{{ messaggio_scaduto }}</p></div>
     {% elif enigma %}
 
-        {% if enigma.end_time %}
+        {% if time_remaining %}
             <div class="timer-container alert alert-primary text-center" data-end-time="{{ enigma.end_time|date:'c' }}">
                 <strong>Tempo Rimanente:</strong>
                 <span id="timer-display">Caricamento...</span>
@@ -44,16 +44,34 @@
         </div>
         <hr class="my-4">
 
-        <!-- SEZIONE RISPOSTE ESPANDIBILE -->
+        <!-- SEZIONE AIUTI -->
+        <h3 class="mt-4">💡 Aiuti</h3>
+        <div id="aiuti-container">
+            {% if suggerimenti_visti %}
+                <ul class="list-group list-group-flush mb-3">
+                    {% for aiuto in suggerimenti_visti %}
+                        <li class="list-group-item bg-transparent"><em>{{ aiuto.testo }}</em></li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p id="nessun-aiuto-msg" class="text-body-secondary"><em>Nessun aiuto richiesto finora.</em></p>
+            {% endif %}
+        </div>
+
+        {% if not risposta_generale %}
+            <button id="richiedi-aiuto-btn" class="btn btn-warning" data-url="{% url 'richiedi_aiuto' enigma.id %}" {% if aiuti_usati >= max_aiuti %}disabled{% endif %}>
+                Richiedi Aiuto (<span id="aiuti-usati-count">{{ aiuti_usati }}</span>/{{ max_aiuti }})
+            </button>
+            <div id="aiuto-response" class="mt-2"></div>
+        {% endif %}
+        <hr class="my-4">
+        <!-- FINE SEZIONE AIUTI -->
+
         <div class="accordion" id="rispostaAccordion">
             <div class="accordion-item">
                 <h2 class="accordion-header" id="headingRisposta">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRisposta" aria-expanded="false" aria-controls="collapseRisposta">
-                        {% if risposte_date %}
-                            <strong>Visualizza la tua Soluzione Inviata</strong>
-                        {% else %}
-                            <strong>Mostra/Nascondi Sezione Risposta</strong>
-                        {% endif %}
+                        {% if risposte_date %}<strong>Visualizza la tua Soluzione Inviata</strong>{% else %}<strong>Mostra/Nascondi Sezione Risposta</strong>{% endif %}
                     </button>
                 </h2>
                 <div id="collapseRisposta" class="accordion-collapse collapse" aria-labelledby="headingRisposta">
@@ -68,29 +86,20 @@
                         {% elif risposte_date %}
                             <div class="alert {% if risposta_generale.is_completa_corretta %}alert-success{% else %}alert-danger{% endif %} mb-0">
                                 <h4 class="alert-heading">Hai già inviato la tua soluzione!</h4>
-                                <ul>
-                                    {% for risposta in risposte_date %}
-                                        <li>
-                                            <strong>{{ risposta.campo.etichetta }}:</strong> "{{ risposta.valore_inserito }}"
-                                            {% if risposta.is_corretta %} ✅ Corretta {% else %} ❌ Errata {% endif %}
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                                <hr>
-                                <p class="mb-0">Punteggio ottenuto per questo enigma: <strong>{{ risposta_generale.punteggio }}</strong></p>
+                                <ul>{% for risposta in risposte_date %}<li><strong>{{ risposta.campo.etichetta }}:</strong> "{{ risposta.valore_inserito }}" {% if risposta.is_corretta %} ✅ Corretta {% else %} ❌ Errata {% endif %}</li>{% endfor %}</ul>
+                                <hr><p class="mb-0">Punteggio ottenuto: <strong>{{ risposta_generale.punteggio }}</strong></p>
                             </div>
                         {% endif %}
                     </div>
                 </div>
             </div>
         </div>
-        <!-- FINE SEZIONE RISPOSTE ESPANDIBILE -->
-
     {% endif %}
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Script del timer (invariato)
     const timerDisplay = document.getElementById('timer-display');
     const timerContainer = document.querySelector('.timer-container');
     if (timerContainer && timerDisplay) {
@@ -104,6 +113,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 timerContainer.classList.add('alert-danger');
                 const formDiv = document.getElementById('rispostaAccordion');
                 if(formDiv) { formDiv.style.display = 'none'; }
+                const aiutoBtn = document.getElementById('richiedi-aiuto-btn');
+                if(aiutoBtn) { aiutoBtn.style.display = 'none'; }
                 return;
             }
             const days = Math.floor(distance / (1000 * 60 * 60 * 24));
@@ -112,6 +123,54 @@ document.addEventListener('DOMContentLoaded', function() {
             const seconds = Math.floor((distance % (1000 * 60)) / 1000);
             timerDisplay.innerHTML = `${days}g ${hours}h ${minutes}m ${seconds}s`;
         }, 1000);
+    }
+
+    // --- SCRIPT PER LA RICHIESTA AJAX DEGLI AIUTI ---
+    const aiutoBtn = document.getElementById('richiedi-aiuto-btn');
+    if (aiutoBtn) {
+        aiutoBtn.addEventListener('click', function() {
+            const url = this.dataset.url;
+            const csrfToken = document.querySelector('form [name=csrfmiddlewaretoken]').value;
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                const responseDiv = document.getElementById('aiuto-response');
+                if (data.success) {
+                    const container = document.getElementById('aiuti-container');
+                    const noAiutoMsg = document.getElementById('nessun-aiuto-msg');
+                    if(noAiutoMsg) noAiutoMsg.remove();
+
+                    let ul = container.querySelector('ul');
+                    if (!ul) {
+                        ul = document.createElement('ul');
+                        ul.className = 'list-group list-group-flush mb-3';
+                        container.appendChild(ul);
+                    }
+                    const li = document.createElement('li');
+                    li.className = 'list-group-item bg-transparent';
+                    li.innerHTML = `<em>${data.testo_aiuto}</em>`;
+                    ul.appendChild(li);
+
+                    const countSpan = document.getElementById('aiuti-usati-count');
+                    countSpan.textContent = data.aiuti_usati;
+
+                    if (data.aiuti_usati >= data.max_aiuti) {
+                        aiutoBtn.disabled = true;
+                        aiutoBtn.innerHTML = 'Tutti gli aiuti usati';
+                    }
+                } else {
+                    responseDiv.innerHTML = `<div class="alert alert-warning alert-dismissible fade show" role="alert">${data.error}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
     }
 });
 </script>
