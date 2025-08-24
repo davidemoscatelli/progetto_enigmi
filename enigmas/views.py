@@ -29,20 +29,15 @@ def enigma_view(request):
     allegati = Allegato.objects.filter(enigma=enigma_corrente)
     campi_risposta = CampoRisposta.objects.filter(enigma=enigma_corrente).order_by('ordine')
     
-    # --- LOGICA CORRETTA ---
-    # Cerca se l'utente ha già una risposta generale
     risposta_generale = RispostaUtente.objects.filter(utente=request.user, enigma=enigma_corrente).first()
     
-    # Mostra il riepilogo SOLO SE esistono già delle risposte multiple inviate
     if risposta_generale and risposta_generale.risposte_multiple.exists():
         risposte_date = risposta_generale.risposte_multiple.all()
         return render(request, 'enigmas/enigma_detail.html', {
             'enigma': enigma_corrente, 'allegati': allegati, 'risposte_date': risposte_date,
             'risposta_generale': risposta_generale, 'time_remaining': time_remaining
         })
-    # --- FINE LOGICA CORRETTA ---
 
-    # Se l'utente non ha ancora inviato le risposte, gestisci il form e gli aiuti
     if request.method == 'POST':
         form = RispostaCheckboxForm(request.POST, campi_risposta=campi_risposta)
         if form.is_valid():
@@ -125,12 +120,27 @@ def richiedi_aiuto_view(request, enigma_id):
 
 @login_required
 def classifica_view(request):
-    utenti = User.objects.filter(is_active=True, is_staff=False, is_superuser=False).annotate(
-        punti_da_risposte=Coalesce(Sum('risposte__punteggio', filter=Q(risposte__is_completa_corretta=True)), Value(0.0), output_field=FloatField()),
-        punti_bonus=Coalesce(F('profile__punteggio_bonus'), Value(0.0), output_field=FloatField())
+    utenti = User.objects.filter(
+        is_active=True, 
+        is_staff=False, 
+        is_superuser=False
+    ).annotate(
+        # CORREZIONE: Rimuoviamo il filtro. La logica del punteggio è già nel campo 'punteggio'.
+        # Se la domanda principale è sbagliata, il punteggio è già 0.
+        punti_da_risposte=Coalesce(
+            Sum('risposte__punteggio'), 
+            Value(0.0), 
+            output_field=FloatField()
+        ),
+        punti_bonus=Coalesce(
+            F('profile__punteggio_bonus'), 
+            Value(0.0), 
+            output_field=FloatField()
+        )
     ).annotate(
         punteggio_totale_reale=F('punti_da_risposte') + F('punti_bonus')
     ).order_by('-punteggio_totale_reale', 'username')
+    
     context = {'classifica': utenti}
     return render(request, 'enigmas/classifica.html', context)
 
